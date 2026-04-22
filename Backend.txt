@@ -1,0 +1,12 @@
+Login 
+(iniciar sesion con doble funcion, recuperar contrasena por medio de correo y telefono con codigo de confirmacion)
+Registro 
+(registro debe tener: Datos personales, correo, telefono, fecha de nacimiento y contrasena con confirmacion)
+
+Base de datos que contenga:
+	Inventario (por categoria)
+	Usuarios (clientes y administrativo)
+	Historial de ventas (entrada y salida)
+	Historial de ingreso de productos
+	Proceso de ordenes
+	

@@ -1,0 +1,96 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #6b1f0f;
+  overflow: hidden;
+}
+
+/* Fondo con curvas */
+.background .shape {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.shape1 {
+  width: 400px;
+  height: 400px;
+  background: #d6cec3;
+  bottom: -150px;
+  left: -150px;
+}
+
+.shape2 {
+  width: 400px;
+  height: 400px;
+  background: #d6cec3;
+  top: -150px;
+  right: -150px;
+}
+
+/* Contenedor */
+.container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.icon {
+  font-size: 50px;
+  color: white;
+  margin-bottom: 20px;
+}
+
+/* Inputs */
+input {
+  display: block;
+  margin: 10px auto;
+  padding: 12px;
+  width: 250px;
+  border: none;
+  border-radius: 5px;
+  background: #e5e5e5;
+}
+
+/* Botón */
+button {
+  width: 270px;
+  padding: 12px;
+  border: none;
+  margin-top: 10px;
+  background: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #ddd;
+}
+
+.link {
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+/* MODALES */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  width: 300px;
+  margin: 10% auto;
+  text-align: center;
+  border-radius: 10px;
+}

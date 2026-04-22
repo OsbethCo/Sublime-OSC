@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="background">
+  <div class="shape shape1"></div>
+  <div class="shape shape2"></div>
+</div>
+
+<div class="container">
+
+  <div class="icon">🛒</div>
+
+  <input type="text" id="username" placeholder="NOMBRE DE USUARIO">
+  <input type="password" id="password" placeholder="CONTRASEÑA">
+
+  <button onclick="login()">INICIAR SESIÓN</button>
+
+  <p class="link" onclick="showRecover()">¿Olvidaste tu contraseña?</p>
+  <p class="link" onclick="showRegister()">¿No tienes cuenta? Regístrate</p>
+
+</div>
+
+<!-- MODAL REGISTRO -->
+<div id="registerModal" class="modal">
+  <div class="modal-content">
+    <h2>Registro</h2>
+    <input type="text" id="regUser" placeholder="Usuario">
+    <input type="password" id="regPass" placeholder="Contraseña">
+    <button onclick="register()">Registrar</button>
+  </div>
+</div>
+
+<!-- MODAL RECUPERAR -->
+<div id="recoverModal" class="modal">
+  <div class="modal-content">
+    <h2>Recuperar contraseña</h2>
+    <input type="text" id="recUser" placeholder="Usuario">
+    <input type="password" id="newPass" placeholder="Nueva contraseña">
+    <button onclick="recover()">Cambiar</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
