@@ -1,7 +1,7 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #6b1f0f;
+  background: #581908;
   overflow: hidden;
 }
 
@@ -34,12 +34,6 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-}
-
-.icon {
-  font-size: 50px;
-  color: white;
-  margin-bottom: 20px;
 }
 
 /* Inputs */
