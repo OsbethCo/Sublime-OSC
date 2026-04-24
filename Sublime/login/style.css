@@ -1,90 +1,132 @@
-body {
+/* RESET */
+* {
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
   font-family: Arial, sans-serif;
-  background: #581908;
-  overflow: hidden;
 }
 
-/* Fondo con curvas */
-.background .shape {
-  position: absolute;
-  border-radius: 50%;
+/* FONDO GENERAL */
+body {
+  height: 100vh;
+  background: linear-gradient(135deg, #2c7a7b, #285e61);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.shape1 {
-  width: 400px;
-  height: 400px;
-  background: #d6cec3;
-  bottom: -150px;
-  left: -150px;
-}
-
-.shape2 {
-  width: 400px;
-  height: 400px;
-  background: #d6cec3;
-  top: -150px;
-  right: -150px;
-}
-
-/* Contenedor */
+/* CONTENEDOR */
 .container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
+  width: 350px;
 }
 
-/* Inputs */
-input {
-  display: block;
-  margin: 10px auto;
-  padding: 12px;
-  width: 250px;
-  border: none;
-  border-radius: 5px;
-  background: #e5e5e5;
-}
-
-/* Botón */
-button {
-  width: 270px;
-  padding: 12px;
-  border: none;
-  margin-top: 10px;
+/* CAJA FORMULARIOS */
+.form-box {
+  position: relative;
+  width: 100%;
   background: white;
+  padding: 30px;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+/* FORMULARIOS */
+.form {
+  position: absolute;
+  width: 100%;
+  transition: 0.5s ease;
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+/* FORM ACTIVO */
+.form.active {
+  opacity: 1;
+  transform: translateX(0);
+  position: relative;
+}
+
+/* TITULOS */
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #2c7a7b;
+}
+
+/* INPUTS */
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 5px 0;
+  border: 2px solid #ddd;
+  border-radius: 20px;
+  outline: none;
+  transition: 0.3s;
+}
+
+/* INPUT FOCUS */
+input:focus {
+  border-color: #2c7a7b;
+}
+
+/* BOTÓN */
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 20px;
+  background: #2c7a7b;
+  color: white;
   font-weight: bold;
   cursor: pointer;
+  transition: 0.3s;
 }
 
 button:hover {
-  background: #ddd;
+  background: #246b6b;
 }
 
-.link {
-  color: white;
-  font-size: 12px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-/* MODALES */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.6);
-}
-
-.modal-content {
-  background: white;
-  padding: 20px;
-  width: 300px;
-  margin: 10% auto;
+/* LINKS */
+p {
   text-align: center;
-  border-radius: 10px;
+  font-size: 13px;
+  margin-top: 10px;
+  cursor: pointer;
+  color: #2c7a7b;
+}
+
+/* VALIDACIÓN */
+input.error {
+  border-color: red;
+}
+
+input.success {
+  border-color: green;
+}
+
+.error {
+  color: red;
+  font-size: 11px;
+  height: 12px;
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* LOGO */
+.logo-container {
+  text-align: center;
+  margin-bottom: 10px;
+  margin-top: -25px;
+}
+
+.logo-container img {
+  width: 120px;
+  margin-bottom: -10px;
+}
+
+.logo-container h3 {
+  font-size: 30px;
+  color: #555;
 }

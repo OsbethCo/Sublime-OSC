@@ -2,51 +2,60 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Login</title>
+  <title>Login & Registro</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="background">
-  <div class="shape shape1"></div>
-  <div class="shape shape2"></div>
-</div>
-
 <div class="container">
 
-  <img src="logo.png" alt="Logo" class="logo">
-  <h2>Bienvenido</h2>
+  <div class="form-box">
 
-  <input type="text" id="username" placeholder="NOMBRE DE USUARIO">
-  <input type="password" id="password" placeholder="CONTRASEÑA">
+    <!-- LOGIN -->
+    <div class="form login-form active">
+      <div class="logo-container">
+        <img src="logo.png" alt="Logo">
+        <h3>Bienvenido a Sublime</h3>
+      </div>
+      <h2>INICIAR SESIÓN</h2>
 
-  <button onclick="login()">INICIAR SESIÓN</button>
+      <input type="text" id="loginEmail" placeholder="Email">
+      <small class="error" id="loginEmailError"></small>
 
-  <p class="link" onclick="showRecover()">¿Olvidaste tu contraseña?</p>
-  <p class="link" onclick="showRegister()">¿No tienes cuenta? Regístrate</p>
+      <input type="password" id="loginPass" placeholder="Contraseña">
+      <small class="error" id="loginPassError"></small>
 
-</div>
+      <button onclick="login()">Iniciar</button>
 
-<!-- MODAL REGISTRO -->
-<div id="registerModal" class="modal">
-  <div class="modal-content">
-    <h2>Registro</h2>
-    <input type="text" id="regUser" placeholder="Usuario">
-    <input type="password" id="regPass" placeholder="Contraseña">
-    <button onclick="register()">Registrar</button>
+      <p onclick="toggleForm()">¿No tienes cuenta? Regístrate</p>
+    </div>
+
+    <!-- REGISTRO -->
+    <div class="form register-form">
+      <h2>REGISTRARSE</h2>
+
+      <input type="text" id="regName" placeholder="Nombre Completo">
+      <small class="error" id="regNameError"></small>
+
+      <input type="email" id="regEmail" placeholder="Email">
+      <small class="error" id="regEmailError"></small>
+
+      <input type="password" id="regPass" placeholder="Contraseña">
+      <small class="error" id="regPassError"></small>
+
+      <input type="password" id="regPass2" placeholder="Confirmar Contraseña">
+      <small class="error" id="regPass2Error"></small>
+
+      <button onclick="register()">Registrar</button>
+
+      <p onclick="toggleForm()">¿Ya tienes cuenta? Inicia sesión</p>
+    </div>
+
   </div>
-</div>
 
-<!-- MODAL RECUPERAR -->
-<div id="recoverModal" class="modal">
-  <div class="modal-content">
-    <h2>Recuperar contraseña</h2>
-    <input type="text" id="recUser" placeholder="Usuario">
-    <input type="password" id="newPass" placeholder="Nueva contraseña">
-    <button onclick="recover()">Cambiar</button>
-  </div>
 </div>
 
 <script src="script.js"></script>
+
 </body>
 </html>
