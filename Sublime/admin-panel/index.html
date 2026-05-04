@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard</title>
+
+<link rel="stylesheet" href="styles.css">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- Excel -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+</head>
+<body>
+
+<div class="container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <h2 class="logo">SUBLIME</h2>
+
+        <ul>
+            <li class="active">Dashboard</li>
+            <li>Inventario</li>
+            <li>Ventas</li>
+            <li>Clientes</li>
+            <li>Facturas</li>
+            <li>Configuración</li>
+        </ul>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+
+        <div class="topbar">
+            <h1>Bienvenido, Admin!</h1>
+            <<button id="openModal" class="btn">Generar Reporte</button>
+        </div>
+
+        <!-- CARDS -->
+        <div class="cards">
+            <div class="card">Ventas <h2>3</h2></div>
+            <div class="card">Ingresos <h2>$199</h2></div>
+            <div class="card">Stock <h2>8</h2></div>
+            <div class="card">Clientes <h2>3</h2></div>
+        </div>
+
+        <!-- TOP + INVENTARIO -->
+        <div class="grid">
+
+            <!-- GRAFICA DONUT -->
+            <div class="box inventory-box">
+                <h3>Valores de Inventario</h3>
+                <div class="chart-donut">
+                    <canvas id="donutChart"></canvas>
+                </div>
+            </div>
+
+            <!-- TOP PRODUCTOS -->
+            <div class="box">
+                <h3>Top productos</h3>
+
+                <div class="bar">
+                    <span>Franela Blanca</span>
+                    <div class="progress"><div style="width:90%"></div></div>
+                    <b>$78</b>
+                </div>
+
+                <div class="bar">
+                    <span>Franela Negra</span>
+                    <div class="progress"><div style="width:70%"></div></div>
+                    <b>$52</b>
+                </div>
+
+                <div class="bar">
+                    <span>Gorra</span>
+                    <div class="progress"><div style="width:40%"></div></div>
+                    <b>$20</b>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- GRAFICA LINEAL -->
+        <div class="box full chart-line-box">
+            <h3>Gastos vs Ganancias</h3>
+            <div class="chart-line">
+                <canvas id="lineChart"></canvas>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script src="script.js"></script>
+<!-- BOTON -->
+
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+
+    <div class="modal-header">
+      <h2>Generar Reporte de Ventas</h2>
+      <span id="closeModal">&times;</span>
+    </div>
+
+    <p class="subtitle">
+      Selecciona el tipo de reporte y formato que deseas generar
+    </p>
+
+    <label>Tipo de Reporte</label>
+    <select id="tipoReporte">
+      <option value="mensual">Mensual</option>
+      <option value="semanal">Semanal</option>
+      <option value="diario">Diario</option>
+    </select>
+
+    <label>Formato</label>
+    <select id="formato">
+      <option value="pdf">PDF</option>
+      <option value="excel">Excel</option>
+    </select>
+
+    <div class="info-box">
+      📊 <b>Reporte</b>
+      <p id="descripcion">
+        Incluye métricas generales, top productos y análisis
+      </p>
+    </div>
+
+    <div class="modal-actions">
+      <button id="cancelar">Cancelar</button>
+      <button id="descargar" class="download">Descargar</button>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

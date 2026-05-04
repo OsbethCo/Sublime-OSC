@@ -1,0 +1,6 @@
+CREATE TABLE alertas (
+    id_alerta INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_producto INTEGER,
+    mensaje TEXT,
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP
+);
