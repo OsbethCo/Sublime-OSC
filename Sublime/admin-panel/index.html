@@ -25,82 +25,430 @@
         <h2 class="logo">SUBLIME</h2>
 
         <ul>
-            <li class="active">Dashboard</li>
-            <li>Inventario</li>
-            <li>Ventas</li>
-            <li>Clientes</li>
-            <li>Facturas</li>
-            <li>Configuración</li>
+            <li class="active" data-section="dashboard">Dashboard</li>
+            <li data-section="inventory">Inventario</li>
+            <li data-section="sales">Ventas</li>
+            <li data-section="clients">Clientes</li>
+            <li data-section="invoices">Facturas</li>
+            <li data-section="settings">Configuración</li>
         </ul>
     </aside>
 
     <!-- MAIN -->
     <main class="main">
 
+        <!-- TOPBAR -->
         <div class="topbar">
-            <h1>Bienvenido, Admin!</h1>
-            <<button id="openModal" class="btn">Generar Reporte</button>
+            <h1 id="pageTitle">Bienvenido, Admin!</h1>
+            <button class="btn" id="openModal">Generar Reporte</button>
         </div>
 
-        <!-- CARDS -->
-        <div class="cards">
-            <div class="card">Ventas <h2>3</h2></div>
-            <div class="card">Ingresos <h2>$199</h2></div>
-            <div class="card">Stock <h2>8</h2></div>
-            <div class="card">Clientes <h2>3</h2></div>
-        </div>
+        <!-- DASHBOARD -->
+        <section class="page-section active" id="dashboard">
+            <div class="dashboard-grid">
 
-        <!-- TOP + INVENTARIO -->
-        <div class="grid">
+                <!-- IZQUIERDA -->
+                <div class="left">
 
-            <!-- GRAFICA DONUT -->
-            <div class="box inventory-box">
-                <h3>Valores de Inventario</h3>
-                <div class="chart-donut">
-                    <canvas id="donutChart"></canvas>
+                    <!-- CARDS -->
+                    <div class="cards">
+                        <div class="card blue">
+                            <p>Ventas</p>
+                            <h2>3</h2>
+                            <span>Total vendidas</span>
+                        </div>
+
+                        <div class="card green">
+                            <p>Ingresos</p>
+                            <h2>$199</h2>
+                            <span>Total ganado</span>
+                        </div>
+
+                        <div class="card yellow">
+                            <p>Stock</p>
+                            <h2>8</h2>
+                            <span>Productos</span>
+                        </div>
+
+                        <div class="card pink">
+                            <p>Clientes</p>
+                            <h2>3</h2>
+                            <span>Registrados</span>
+                        </div>
+                    </div>
+
+                    <!-- USUARIOS + INVENTARIO -->
+                    <div class="row-2">
+
+                        <!-- USUARIOS -->
+                        <div class="box users-box">
+                            <h3>N° de usuarios</h3>
+
+                            <div class="users-content">
+                                <div class="icon">👤</div>
+                                <div>
+                                    <h2>583K</h2>
+                                    <p>Total Customers</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DONUT -->
+                        <div class="box inventory-box">
+                            <h3>Valores de Inventario</h3>
+                            <div class="chart-donut">
+                                <canvas id="donutChart"></canvas>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- GRAFICA -->
+                    <div class="box chart-line-box">
+                        <h3>Gastos vs Ganancias</h3>
+                        <div class="chart-line">
+                            <canvas id="lineChart"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- DERECHA -->
+                <div class="right">
+
+                    <div class="box products-box">
+                        <h3>Top 10 Productos por Ventas</h3>
+
+                        <div class="bar">
+                            <span>Franela Blanca</span>
+                            <div class="progress"><div style="width:90%"></div></div>
+                            <b>$78</b>
+                        </div>
+
+                        <div class="bar">
+                            <span>Franela Negra</span>
+                            <div class="progress"><div style="width:70%"></div></div>
+                            <b>$52</b>
+                        </div>
+
+                        <div class="bar">
+                            <span>Morrales</span>
+                            <div class="progress"><div style="width:50%"></div></div>
+                            <b>$36</b>
+                        </div>
+
+                        <div class="bar">
+                            <span>Gorra</span>
+                            <div class="progress"><div style="width:40%"></div></div>
+                            <b>$20</b>
+                        </div>
+
+                        <div class="bar">
+                            <span>Taza</span>
+                            <div class="progress"><div style="width:30%"></div></div>
+                            <b>$13</b>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- INVENTARIO -->
+        <section class="page-section" id="inventory">
+            <div class="page-header">
+                <div>
+                    <p>Gestiona tus productos, categorías y niveles de stock.</p>
+                </div>
+                <button class="btn secondary">+ Agregar Producto</button>
+            </div>
+
+            <div class="filter-row">
+                <input type="search" placeholder="Buscar productos..." />
+            </div>
+
+            <div class="table-card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Franela Clásica Negra</td>
+                            <td>franelas</td>
+                            <td>$25.99</td>
+                            <td>50</td>
+                            <td>Editar / Eliminar</td>
+                        </tr>
+                        <tr>
+                            <td>Taza Sublime Edition</td>
+                            <td>tazas</td>
+                            <td>$12.99</td>
+                            <td>100</td>
+                            <td>Editar / Eliminar</td>
+                        </tr>
+                        <tr>
+                            <td>Gorra Sublime Original</td>
+                            <td>gorras</td>
+                            <td>$19.99</td>
+                            <td>60</td>
+                            <td>Editar / Eliminar</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- VENTAS -->
+        <section class="page-section" id="sales">
+            <div class="page-header">
+                <div>
+                    <p>Procesa ventas, selecciona clientes y revisa el carrito.</p>
                 </div>
             </div>
 
-            <!-- TOP PRODUCTOS -->
-            <div class="box">
-                <h3>Top productos</h3>
+            <div class="row-2 sales-grid">
+                <div class="box sales-box">
+                    <label>Cliente</label>
+                    <select>
+                        <option>Seleccionar cliente...</option>
+                        <option>Juan Pérez</option>
+                        <option>María García</option>
+                    </select>
 
-                <div class="bar">
-                    <span>Franela Blanca</span>
-                    <div class="progress"><div style="width:90%"></div></div>
-                    <b>$78</b>
+                    <label>Productos</label>
+                    <div class="product-cards">
+                        <div class="product-card">
+                            <strong>Franela Clásica Negra</strong>
+                            <p>$25.99 · Stock: 50</p>
+                        </div>
+                        <div class="product-card">
+                            <strong>Taza Sublime Edition</strong>
+                            <p>$12.99 · Stock: 100</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="bar">
-                    <span>Franela Negra</span>
-                    <div class="progress"><div style="width:70%"></div></div>
-                    <b>$52</b>
+                <div class="box cart-box">
+                    <h3>Carrito</h3>
+                    <p>Carrito vacío</p>
                 </div>
+            </div>
+        </section>
 
-                <div class="bar">
-                    <span>Gorra</span>
-                    <div class="progress"><div style="width:40%"></div></div>
-                    <b>$20</b>
+        <!-- CLIENTES -->
+        <section class="page-section" id="clients">
+            <div class="page-header">
+                <div>
+                    <p>Gestiona tu base de clientes y agrega nuevos contactos.</p>
                 </div>
-
+                <button class="btn secondary">+ Agregar Cliente</button>
             </div>
 
-        </div>
-
-        <!-- GRAFICA LINEAL -->
-        <div class="box full chart-line-box">
-            <h3>Gastos vs Ganancias</h3>
-            <div class="chart-line">
-                <canvas id="lineChart"></canvas>
+            <div class="filter-row">
+                <input type="search" placeholder="Buscar clientes..." />
             </div>
-        </div>
+
+            <div class="card-grid">
+                <div class="client-card">
+                    <div class="client-avatar">J</div>
+                    <div>
+                        <h3>Juan Pérez</h3>
+                        <p>juan.perez@email.com</p>
+                        <p>+58 414-1234567</p>
+                        <p>Av. Principal, Caracas</p>
+                    </div>
+                </div>
+                <div class="client-card">
+                    <div class="client-avatar">M</div>
+                    <div>
+                        <h3>María González</h3>
+                        <p>maria.gonzalez@email.com</p>
+                        <p>+58 424-7654321</p>
+                        <p>Calle 5, Valencia</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FACTURAS -->
+        <section class="page-section" id="invoices">
+            <div class="page-header">
+                <div>
+                    <p>Revisa y descarga las facturas de ventas más recientes.</p>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <input type="search" placeholder="Buscar por número o cliente..." />
+            </div>
+
+            <div class="table-card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>N° Factura</th>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>INV-001</td>
+                            <td>Juan Pérez</td>
+                            <td>31/03/2026</td>
+                            <td>2 producto(s)</td>
+                            <td>$64.97</td>
+                            <td>Ver Detalle</td>
+                        </tr>
+                        <tr>
+                            <td>INV-002</td>
+                            <td>María González</td>
+                            <td>01/04/2026</td>
+                            <td>1 producto(s)</td>
+                            <td>$19.99</td>
+                            <td>Ver Detalle</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- CONFIGURACIÓN -->
+        <section class="page-section" id="settings">
+            <div class="page-header">
+                <div>
+                    <p>Administra las preferencias del sistema y la seguridad.</p>
+                </div>
+            </div>
+
+            <div class="settings-tabs">
+                <button class="tab-button active settings-tab-button" data-config="general">General</button>
+                <button class="tab-button settings-tab-button" data-config="seguridad">Seguridad</button>
+                <button class="tab-button settings-tab-button" data-config="usuarios">Usuarios</button>
+                <button class="tab-button settings-tab-button" data-config="historial">Historial</button>
+            </div>
+
+            <div class="settings-content">
+                <div class="settings-panel active" id="general">
+                    <div class="box settings-card">
+                        <h3>Apariencia</h3>
+                        <p id="themeModeText">Modo claro</p>
+                        <label class="switch">
+                            <input type="checkbox" id="darkModeToggle" />
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-panel" id="seguridad">
+                    <div class="box settings-card">
+                        <h3>Cambiar Contraseña</h3>
+                        <label>Contraseña Actual</label>
+                        <input type="password" placeholder="Contraseña actual" />
+                        <label>Nueva Contraseña</label>
+                        <input type="password" placeholder="Nueva contraseña" />
+                        <label>Confirmar Nueva Contraseña</label>
+                        <input type="password" placeholder="Confirmar contraseña" />
+                        <button class="btn secondary">Actualizar Contraseña</button>
+                    </div>
+                    <div class="box settings-card">
+                        <h3>Cambiar Correo Electrónico</h3>
+                        <label>Correo Actual</label>
+                        <input type="email" value="admin@sublime.com" readonly />
+                        <label>Nuevo Correo Electrónico</label>
+                        <input type="email" placeholder="Nuevo correo" />
+                        <button class="btn secondary">Actualizar Correo</button>
+                    </div>
+                </div>
+
+                <div class="settings-panel" id="usuarios">
+                    <div class="box settings-card">
+                        <h3>Crear Usuario Trabajador</h3>
+                        <label>Nombre Completo</label>
+                        <input type="text" placeholder="Nombre completo" />
+                        <label>Correo Electrónico</label>
+                        <input type="email" placeholder="Correo electrónico" />
+                        <label>Contraseña</label>
+                        <input type="password" placeholder="Contraseña" />
+                        <button class="btn secondary">Crear Usuario</button>
+                    </div>
+                    <div class="box settings-card">
+                        <h3>Usuarios Trabajadores</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Correo</th>
+                                    <th>Rol</th>
+                                    <th>Fecha Creación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Juan Pérez</td>
+                                    <td>juan@sublime.com</td>
+                                    <td>Trabajador</td>
+                                    <td>2026-01-15</td>
+                                </tr>
+                                <tr>
+                                    <td>María García</td>
+                                    <td>maria@sublime.com</td>
+                                    <td>Trabajador</td>
+                                    <td>2026-02-20</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="settings-panel" id="historial">
+                    <div class="box settings-card">
+                        <h3>Historial de Inicio de Sesión</h3>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Correo</th>
+                                    <th>Fecha y Hora</th>
+                                    <th>Dirección IP</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Administrador</td>
+                                    <td>admin@sublime.com</td>
+                                    <td>2026-04-27 09:30</td>
+                                    <td>192.168.1.100</td>
+                                    <td>Exitoso</td>
+                                </tr>
+                                <tr>
+                                    <td>Juan Pérez</td>
+                                    <td>juan@sublime.com</td>
+                                    <td>2026-04-27 08:15</td>
+                                    <td>192.168.1.101</td>
+                                    <td>Exitoso</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
 
     </main>
 </div>
 
 <script src="script.js"></script>
-<!-- BOTON -->
-
 
 <!-- MODAL -->
 <div class="modal" id="modal">
@@ -129,7 +477,7 @@
     </select>
 
     <div class="info-box">
-      📊 <b>Reporte</b>
+       <b>Reporte</b>
       <p id="descripcion">
         Incluye métricas generales, top productos y análisis
       </p>

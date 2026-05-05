@@ -12,6 +12,72 @@ window.onload = () => {
 };
 
 // =====================
+// NAVEGACIÓN DE SECCIONES
+// =====================
+const menuItems = document.querySelectorAll('.sidebar li[data-section]');
+const sections = document.querySelectorAll('.page-section');
+const pageTitle = document.getElementById('pageTitle');
+
+const sectionTitles = {
+    dashboard: 'Bienvenido, Admin!',
+    inventory: 'Inventario',
+    sales: 'Ventas',
+    clients: 'Clientes',
+    invoices: 'Facturas',
+    settings: 'Configuración'
+};
+
+menuItems.forEach(item => {
+    item.addEventListener('click', () => {
+        const target = item.dataset.section;
+
+        menuItems.forEach(menu => menu.classList.remove('active'));
+        item.classList.add('active');
+
+        sections.forEach(section => {
+            section.classList.toggle('active', section.id === target);
+        });
+
+        pageTitle.textContent = sectionTitles[target] || 'Panel';
+    });
+});
+
+const settingsTabs = document.querySelectorAll('.settings-tab-button');
+const settingsPanels = document.querySelectorAll('.settings-panel');
+const darkModeToggle = document.getElementById('darkModeToggle');
+const themeModeText = document.getElementById('themeModeText');
+
+settingsTabs.forEach(button => {
+    button.addEventListener('click', () => {
+        const target = button.dataset.config;
+
+        settingsTabs.forEach(tab => tab.classList.remove('active'));
+        button.classList.add('active');
+
+        settingsPanels.forEach(panel => {
+            panel.classList.toggle('active', panel.id === target);
+        });
+    });
+});
+
+function applyDarkMode(enabled) {
+    document.body.classList.toggle('dark', enabled);
+    themeModeText.textContent = enabled ? 'Modo oscuro' : 'Modo claro';
+    localStorage.setItem('darkMode', enabled ? 'true' : 'false');
+}
+
+if (darkModeToggle) {
+    darkModeToggle.addEventListener('change', () => {
+        applyDarkMode(darkModeToggle.checked);
+    });
+
+    if (localStorage.getItem('darkMode') === 'true') {
+        darkModeToggle.checked = true;
+        applyDarkMode(true);
+    }
+}
+
+// =====================
 // DONUT CHART (INVENTARIO)
 // =====================
 const donut = document.getElementById("donutChart");
