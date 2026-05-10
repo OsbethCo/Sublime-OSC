@@ -1,4 +1,22 @@
-let users = JSON.parse(localStorage.getItem("users")) || {};
+// ----------------------
+// API UTILS
+// ----------------------
+async function apiRequest(endpoint, data) {
+  const response = await fetch(`../api/${endpoint}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(data)
+  });
+
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(body.message || "Error de servidor");
+  }
+
+  return body;
+}
 
 // ----------------------
 // CAMBIAR FORMULARIO
@@ -26,7 +44,11 @@ function setSuccess(input, errorId) {
 // ----------------------
 // LOGIN
 // ----------------------
-function login() {
+function handleLogin() {
+  login().catch(error => alert(error.message || "Credenciales incorrectas"));
+}
+
+async function login() {
   let email = document.getElementById("loginEmail");
   let pass = document.getElementById("loginPass");
 
@@ -48,17 +70,27 @@ function login() {
 
   if (!valid) return;
 
-  if (users[email.value] && users[email.value].password === pass.value) {
-    alert("Login exitoso");
-  } else {
-    alert("Credenciales incorrectas");
+  try {
+    const result = await apiRequest("login", {
+      email: email.value,
+      password: pass.value
+    });
+
+    sessionStorage.setItem("sublimeUser", JSON.stringify(result.user));
+    window.location.href = "../admin-panel/index.html";
+  } catch (error) {
+    alert(error.message || "Credenciales incorrectas");
   }
 }
 
 // ----------------------
 // REGISTRO
 // ----------------------
-function register() {
+function handleRegister() {
+  register().catch(error => alert(error.message || "No se pudo registrar"));
+}
+
+async function register() {
   let name = document.getElementById("regName");
   let email = document.getElementById("regEmail");
   let pass = document.getElementById("regPass");
@@ -96,18 +128,16 @@ function register() {
 
   if (!valid) return;
 
-  if (users[email.value]) {
-    alert("Usuario ya existe");
-    return;
+  try {
+    await apiRequest("register", {
+      name: name.value,
+      email: email.value,
+      password: pass.value
+    });
+
+    alert("Registro exitoso");
+    toggleForm();
+  } catch (error) {
+    alert(error.message || "No se pudo registrar");
   }
-
-  users[email.value] = {
-    name: name.value,
-    password: pass.value
-  };
-
-  localStorage.setItem("users", JSON.stringify(users));
-
-  alert("Registro exitoso");
-  toggleForm();
 }

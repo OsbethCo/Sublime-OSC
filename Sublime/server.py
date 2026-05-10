@@ -1,0 +1,185 @@
+from flask import Flask, request, jsonify
+import sqlite3
+import os
+import json
+
+app = Flask(__name__, static_folder='.', static_url_path='')
+
+# Configuración de base de datos
+BD_DIR = os.path.join(os.path.dirname(__file__), 'BD')
+DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
+BASE_DB_PATH = os.path.join(BD_DIR, 'base.db')
+DB_PATH = BASE_DB_PATH if os.path.exists(BASE_DB_PATH) else os.path.join(DATA_DIR, 'sublime.db')
+
+if not os.path.exists(BASE_DB_PATH) and not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    conn = get_db()
+    conn.execute('PRAGMA foreign_keys = ON')
+    
+    # Siempre cargar esquemas SQL
+    sql_files = ['roles.sql', 'usuarios.sql']
+    for sql_file in sql_files:
+        sql_path = os.path.join(BD_DIR, sql_file)
+        if os.path.exists(sql_path):
+            with open(sql_path, 'r', encoding='utf-8') as f:
+                sql = f.read()
+                # Hacer CREATE TABLE IF NOT EXISTS
+                sql = sql.replace('CREATE TABLE', 'CREATE TABLE IF NOT EXISTS')
+                conn.executescript(sql)
+    
+    # Insertar datos iniciales si no existen
+    if conn.execute('SELECT COUNT(*) FROM roles').fetchone()[0] == 0:
+        conn.execute('INSERT INTO roles (nombre) VALUES (?), (?)', ('Administrador', 'Trabajador'))
+    if conn.execute('SELECT COUNT(*) FROM usuarios').fetchone()[0] == 0:
+        conn.execute('INSERT INTO usuarios (nombre, correo, contraseña, id_rol) VALUES (?, ?, ?, ?)',
+                    ('Administrador', 'admin@sublime.com', 'admin123', 1))
+    
+    conn.commit()
+    conn.close()
+
+init_db()
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    
+    if not email or not password:
+        return jsonify({'message': 'Email y contraseña son requeridos.'}), 400
+    
+    conn = get_db()
+    user = conn.execute(
+        'SELECT u.id_usuario, u.nombre, u.correo, u.contraseña, r.nombre AS rol '
+        'FROM usuarios u LEFT JOIN roles r ON u.id_rol = r.id_rol WHERE u.correo = ?',
+        (email,)
+    ).fetchone()
+    conn.close()
+    
+    if not user or user['contraseña'] != password:
+        return jsonify({'message': 'Credenciales incorrectas.'}), 401
+    
+    user_data = {
+        'id': user['id_usuario'],
+        'nombre': user['nombre'],
+        'correo': user['correo'],
+        'rol': user['rol'] or 'Trabajador'
+    }
+    return jsonify({'user': user_data})
+
+@app.route('/api/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    name = data.get('name')
+    email = data.get('email')
+    password = data.get('password')
+    
+    if not name or not email or not password:
+        return jsonify({'message': 'Nombre, email y contraseña son requeridos.'}), 400
+    
+    conn = get_db()
+    existing = conn.execute('SELECT 1 FROM usuarios WHERE correo = ?', (email,)).fetchone()
+    if existing:
+        conn.close()
+        return jsonify({'message': 'El correo ya está registrado.'}), 409
+    
+    role = conn.execute('SELECT id_rol FROM roles WHERE nombre = ? LIMIT 1', ('Trabajador',)).fetchone()
+    role_id = role['id_rol'] if role else 2
+    
+    conn.execute('INSERT INTO usuarios (nombre, correo, contraseña, id_rol) VALUES (?, ?, ?, ?)',
+                (name, email, password, role_id))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'message': 'Usuario registrado con éxito.'}), 201
+
+@app.route('/api/dashboard', methods=['GET'])
+def dashboard():
+    conn = get_db()
+    
+    stats = {}
+    stats['totalSales'] = conn.execute('SELECT COUNT(*) AS total FROM ventas').fetchone()['total']
+    stats['totalClients'] = conn.execute('SELECT COUNT(*) AS total FROM clientes').fetchone()['total']
+    stats['totalProducts'] = conn.execute('SELECT COUNT(*) AS total FROM productos').fetchone()['total']
+    stats['totalStock'] = conn.execute('SELECT IFNULL(SUM(stock), 0) AS total FROM productos').fetchone()['total']
+    stats['totalIncome'] = conn.execute('SELECT IFNULL(SUM(total), 0) AS total FROM ventas').fetchone()['total']
+    
+    top_products = conn.execute(
+        'SELECT p.nombre AS producto, SUM(d.cantidad) AS cantidad, IFNULL(SUM(d.cantidad * d.precio_unitario), 0) AS total '
+        'FROM detalle_ventas d JOIN productos p ON p.id_producto = d.id_producto '
+        'GROUP BY p.id_producto ORDER BY cantidad DESC LIMIT 5'
+    ).fetchall()
+    
+    categories = conn.execute(
+        'SELECT c.nombre AS categoria, IFNULL(SUM(p.stock), 0) AS stock '
+        'FROM categorias c LEFT JOIN productos p ON p.id_categoria = c.id_categoria '
+        'GROUP BY c.id_categoria ORDER BY stock DESC LIMIT 5'
+    ).fetchall()
+    
+    monthly = conn.execute(
+        "SELECT strftime('%m', fecha) AS mes, IFNULL(SUM(total), 0) AS total "
+        'FROM ventas GROUP BY mes ORDER BY mes ASC'
+    ).fetchall()
+    
+    conn.close()
+    
+    return jsonify({
+        'stats': stats,
+        'topProducts': [dict(row) for row in top_products],
+        'categories': [dict(row) for row in categories],
+        'monthly': [dict(row) for row in monthly]
+    })
+
+@app.route('/api/inventory', methods=['GET'])
+def inventory():
+    conn = get_db()
+    inventory = conn.execute(
+        'SELECT p.id_producto, p.nombre, p.precio_venta AS precio, p.stock, c.nombre AS categoria '
+        'FROM productos p LEFT JOIN categorias c ON p.id_categoria = c.id_categoria '
+        'ORDER BY p.nombre ASC'
+    ).fetchall()
+    conn.close()
+    return jsonify({'inventory': [dict(row) for row in inventory]})
+
+@app.route('/api/clients', methods=['GET'])
+def clients():
+    conn = get_db()
+    clients = conn.execute(
+        'SELECT id_cliente, nombre, correo, telefono, direccion FROM clientes ORDER BY nombre ASC LIMIT 20'
+    ).fetchall()
+    conn.close()
+    return jsonify({'clients': [dict(row) for row in clients]})
+
+@app.route('/api/invoices', methods=['GET'])
+def invoices():
+    conn = get_db()
+    invoices = conn.execute(
+        'SELECT v.id_venta AS id, c.nombre AS cliente, v.fecha, COUNT(d.id_detalle) AS items, IFNULL(v.total, 0) AS total '
+        'FROM ventas v LEFT JOIN clientes c ON v.id_cliente = c.id_cliente '
+        'LEFT JOIN detalle_ventas d ON d.id_venta = v.id_venta '
+        'GROUP BY v.id_venta ORDER BY v.fecha DESC LIMIT 20'
+    ).fetchall()
+    conn.close()
+    return jsonify({'invoices': [dict(row) for row in invoices]})
+
+@app.route('/api/sales-data', methods=['GET'])
+def sales_data():
+    conn = get_db()
+    products = conn.execute(
+        'SELECT id_producto, nombre, precio_venta AS precio, stock FROM productos ORDER BY nombre ASC LIMIT 20'
+    ).fetchall()
+    clients = conn.execute(
+        'SELECT id_cliente, nombre FROM clientes ORDER BY nombre ASC LIMIT 20'
+    ).fetchall()
+    conn.close()
+    return jsonify({'products': [dict(row) for row in products], 'clients': [dict(row) for row in clients]})
+
+if __name__ == '__main__':
+    app.run(debug=True, port=3000)
