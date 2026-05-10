@@ -6,7 +6,7 @@
 }
 
 body{
-    background:#f4f6f9;
+    background:#e2e2e2;
 }
 
 /* LAYOUT */
@@ -17,13 +17,13 @@ body{
 /* SIDEBAR */
 .sidebar{
     width:220px;
-    background:white;
+    background:rgb(255, 255, 255);
     height:100vh;
     padding:20px;
 }
 
 .logo{
-    color:#ff7a00;
+    color:#2c7a7b;
 }
 
 .sidebar ul{
@@ -38,7 +38,7 @@ body{
 }
 
 .sidebar li.active{
-    background:#ffe8c2;
+    background:#44b9bb;
 }
 
 .page-section{
@@ -131,7 +131,7 @@ body{
     height:50px;
     border-radius:50%;
     background:#fde8d1;
-    color:#be5f00;
+    color:#2c7a7b;
     display:flex;
     justify-content:center;
     align-items:center;
@@ -169,7 +169,7 @@ body{
 }
 
 .btn.secondary{
-    background:#f97316;
+    background:#2c7a7b;
 }
 
 .settings-tabs{
@@ -364,7 +364,7 @@ body.dark .btn{
 }
 
 body.dark .btn.secondary{
-    background:#f97316;
+    background:#2c7a7b;
 }
 
 body.dark .progress{
