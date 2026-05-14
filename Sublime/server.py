@@ -1,50 +1,136 @@
 from flask import Flask, request, jsonify
 import sqlite3
 import os
-import json
+
+try:
+    import mysql.connector
+except ImportError:
+    mysql = None
 
 app = Flask(__name__, static_folder='.', static_url_path='')
 
 # Configuración de base de datos
 BD_DIR = os.path.join(os.path.dirname(__file__), 'BD')
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
-BASE_DB_PATH = os.path.join(BD_DIR, 'base.db')
-DB_PATH = BASE_DB_PATH if os.path.exists(BASE_DB_PATH) else os.path.join(DATA_DIR, 'sublime.db')
+DB_SQL_FILE = os.path.join(BD_DIR, 'database.sql')
+SQLITE_DB_FILE = os.path.join(BD_DIR, 'database.db')
+SQLITE_FALLBACK = os.path.join(DATA_DIR, 'sublime.db')
 
-if not os.path.exists(BASE_DB_PATH) and not os.path.exists(DATA_DIR):
-    os.makedirs(DATA_DIR)
+MYSQL_CONFIG = {
+    'host': os.getenv('MYSQL_HOST', ''),
+    'port': int(os.getenv('MYSQL_PORT', 3306)),
+    'user': os.getenv('MYSQL_USER', ''),
+    'password': os.getenv('MYSQL_PASSWORD', ''),
+    'database': os.getenv('MYSQL_DATABASE', 'sublime_db'),
+}
+USE_MYSQL = bool(MYSQL_CONFIG['host'] and MYSQL_CONFIG['user'] and MYSQL_CONFIG['password'])
 
-def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR, exist_ok=True)
 
-def init_db():
-    conn = get_db()
+
+def create_sqlite_db(path):
+    if not os.path.exists(DB_SQL_FILE):
+        raise RuntimeError('No se encontró BD/database.sql para crear la base SQLite.')
+    conn = sqlite3.connect(path)
     conn.execute('PRAGMA foreign_keys = ON')
-    
-    # Siempre cargar esquemas SQL
-    sql_files = ['roles.sql', 'usuarios.sql']
-    for sql_file in sql_files:
-        sql_path = os.path.join(BD_DIR, sql_file)
-        if os.path.exists(sql_path):
-            with open(sql_path, 'r', encoding='utf-8') as f:
-                sql = f.read()
-                # Hacer CREATE TABLE IF NOT EXISTS
-                sql = sql.replace('CREATE TABLE', 'CREATE TABLE IF NOT EXISTS')
-                conn.executescript(sql)
-    
-    # Insertar datos iniciales si no existen
-    if conn.execute('SELECT COUNT(*) FROM roles').fetchone()[0] == 0:
-        conn.execute('INSERT INTO roles (nombre) VALUES (?), (?)', ('Administrador', 'Trabajador'))
-    if conn.execute('SELECT COUNT(*) FROM usuarios').fetchone()[0] == 0:
-        conn.execute('INSERT INTO usuarios (nombre, correo, contraseña, id_rol) VALUES (?, ?, ?, ?)',
-                    ('Administrador', 'admin@sublime.com', 'admin123', 1))
-    
+    with open(DB_SQL_FILE, 'r', encoding='utf-8') as f:
+        conn.executescript(f.read())
     conn.commit()
     conn.close()
 
+
+def create_mysql_db():
+    if mysql is None:
+        raise RuntimeError('mysql-connector-python no está instalado.')
+    conn = mysql.connector.connect(
+        host=MYSQL_CONFIG['host'],
+        port=MYSQL_CONFIG['port'],
+        user=MYSQL_CONFIG['user'],
+        password=MYSQL_CONFIG['password'],
+    )
+    cursor = conn.cursor()
+    cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{MYSQL_CONFIG['database']}` DEFAULT CHARACTER SET utf8mb4")
+    cursor.close()
+    conn.close()
+
+    conn = mysql.connector.connect(**MYSQL_CONFIG)
+    cursor = conn.cursor()
+    if not os.path.exists(DB_SQL_FILE):
+        raise RuntimeError('No se encontró BD/database.sql para crear la base MySQL.')
+    with open(DB_SQL_FILE, 'r', encoding='utf-8') as f:
+        for _ in cursor.execute(f.read(), multi=True):
+            pass
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
+def get_db():
+    if USE_MYSQL:
+        if mysql is None:
+            raise RuntimeError('mysql-connector-python no está instalado.')
+        return mysql.connector.connect(**MYSQL_CONFIG)
+
+    db_path = SQLITE_DB_FILE if os.path.exists(SQLITE_DB_FILE) else SQLITE_FALLBACK
+    if not os.path.exists(db_path):
+        create_sqlite_db(db_path)
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_db():
+    if USE_MYSQL:
+        create_mysql_db()
+        conn = get_db()
+        cursor = conn.cursor()
+    else:
+        if not os.path.exists(SQLITE_DB_FILE) and not os.path.exists(SQLITE_FALLBACK):
+            create_sqlite_db(SQLITE_DB_FILE)
+        conn = get_db()
+        conn.execute('PRAGMA foreign_keys = ON')
+        cursor = conn.cursor()
+
+    cursor.execute('SELECT COUNT(*) FROM roles')
+    role_count = cursor.fetchone()[0]
+    if role_count == 0:
+        if USE_MYSQL:
+            cursor.execute('INSERT INTO roles (nombre) VALUES (%s), (%s)', ('Administrador', 'Trabajador'))
+        else:
+            cursor.execute('INSERT INTO roles (nombre) VALUES (?), (?)', ('Administrador', 'Trabajador'))
+
+    cursor.execute('SELECT COUNT(*) FROM usuarios')
+    user_count = cursor.fetchone()[0]
+    if user_count == 0:
+        if USE_MYSQL:
+            cursor.execute(
+                'INSERT INTO usuarios (nombre, correo, contraseña, id_rol) VALUES (%s, %s, %s, %s)',
+                ('Administrador', 'admin@sublime.com', 'admin123', 1)
+            )
+        else:
+            cursor.execute(
+                'INSERT INTO usuarios (nombre, correo, contraseña, id_rol) VALUES (?, ?, ?, ?)',
+                ('Administrador', 'admin@sublime.com', 'admin123', 1)
+            )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+
 init_db()
+
+
+@app.route('/')
+def root():
+    return app.send_static_file('login/index.html')
+
+
+@app.route('/admin')
+def admin_index():
+    return app.send_static_file('admin-panel/index.html')
 
 @app.route('/api/login', methods=['POST'])
 def login():

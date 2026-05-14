@@ -1,4 +1,0 @@
-CREATE TABLE roles (
-    id_rol INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre VARCHAR(50) NOT NULL
-);

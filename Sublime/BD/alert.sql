@@ -1,1 +1,0 @@
-ALTER TABLE productos ADD stock_minimo INTEGER DEFAULT 5;
