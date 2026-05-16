@@ -9,6 +9,7 @@
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <!-- PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -22,6 +23,7 @@
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
+
         <h2 class="logo">SUBLIME</h2>
 
         <ul>
@@ -32,6 +34,7 @@
             <li data-section="invoices">Facturas</li>
             <li data-section="settings">Configuración</li>
         </ul>
+
     </aside>
 
     <!-- MAIN -->
@@ -39,15 +42,27 @@
 
         <!-- TOPBAR -->
         <div class="topbar">
+
             <h1 id="pageTitle">Bienvenido, Admin!</h1>
+
             <div class="topbar-actions">
-                <button class="btn secondary" id="logoutBtn">Salir</button>
-                <button class="btn" id="openModal">Generar Reporte</button>
+
+                <button class="btn secondary" id="logoutBtn">
+                    Salir
+                </button>
+
+                <!-- BOTÓN SOLO DASHBOARD -->
+                <button class="btn dashboard-report-btn" id="openModal">
+                    Generar Reporte
+                </button>
+
             </div>
+
         </div>
 
         <!-- DASHBOARD -->
         <section class="page-section active" id="dashboard">
+
             <div class="dashboard-grid">
 
                 <!-- IZQUIERDA -->
@@ -55,6 +70,7 @@
 
                     <!-- CARDS -->
                     <div class="cards">
+
                         <div class="card blue">
                             <p>Ventas</p>
                             <h2 id="salesCount">3</h2>
@@ -78,6 +94,7 @@
                             <h2 id="clientCount">3</h2>
                             <span>Registrados</span>
                         </div>
+
                     </div>
 
                     <!-- USUARIOS + INVENTARIO -->
@@ -85,33 +102,44 @@
 
                         <!-- USUARIOS -->
                         <div class="box users-box">
+
                             <h3>N° de usuarios</h3>
 
                             <div class="users-content">
+
                                 <div class="icon">👤</div>
+
                                 <div>
                                     <h2>583K</h2>
                                     <p>Total Customers</p>
                                 </div>
+
                             </div>
+
                         </div>
 
                         <!-- DONUT -->
                         <div class="box inventory-box">
+
                             <h3>Valores de Inventario</h3>
+
                             <div class="chart-donut">
                                 <canvas id="donutChart"></canvas>
                             </div>
+
                         </div>
 
                     </div>
 
                     <!-- GRAFICA -->
                     <div class="box chart-line-box">
+
                         <h3>Gastos vs Ganancias</h3>
+
                         <div class="chart-line">
                             <canvas id="lineChart"></canvas>
                         </div>
+
                     </div>
 
                 </div>
@@ -120,49 +148,72 @@
                 <div class="right">
 
                     <div class="box products-box">
+
                         <h3>Top 10 Productos por Ventas</h3>
 
                         <div class="bar">
                             <span>Franela Blanca</span>
-                            <div class="progress"><div style="width:90%"></div></div>
+                            <div class="progress">
+                                <div style="width:90%"></div>
+                            </div>
                             <b>$78</b>
                         </div>
 
                         <div class="bar">
                             <span>Franela Negra</span>
-                            <div class="progress"><div style="width:70%"></div></div>
+                            <div class="progress">
+                                <div style="width:70%"></div>
+                            </div>
                             <b>$52</b>
                         </div>
 
                         <div class="bar">
                             <span>Morrales</span>
-                            <div class="progress"><div style="width:50%"></div></div>
+                            <div class="progress">
+                                <div style="width:50%"></div>
+                            </div>
                             <b>$36</b>
                         </div>
 
                         <div class="bar">
                             <span>Gorra</span>
-                            <div class="progress"><div style="width:40%"></div></div>
+                            <div class="progress">
+                                <div style="width:40%"></div>
+                            </div>
                             <b>$20</b>
                         </div>
 
                         <div class="bar">
                             <span>Taza</span>
-                            <div class="progress"><div style="width:30%"></div></div>
+                            <div class="progress">
+                                <div style="width:30%"></div>
+                            </div>
                             <b>$13</b>
                         </div>
+
                     </div>
+
                 </div>
+
             </div>
+
         </section>
 
         <!-- INVENTARIO -->
         <section class="page-section" id="inventory">
+
             <div class="page-header">
+
                 <div>
-                    <p>Gestiona tus productos, categorías y niveles de stock.</p>
+                    <p>
+                        Gestiona tus productos, categorías y niveles de stock.
+                    </p>
                 </div>
-                <button class="btn secondary">+ Agregar Producto</button>
+
+                <button class="btn secondary">
+                    + Agregar Producto
+                </button>
+
             </div>
 
             <div class="filter-row">
@@ -170,7 +221,9 @@
             </div>
 
             <div class="table-card">
+
                 <table class="data-table">
+
                     <thead>
                         <tr>
                             <th>Producto</th>
@@ -180,7 +233,9 @@
                             <th>Acciones</th>
                         </tr>
                     </thead>
+
                     <tbody id="inventoryTableBody">
+
                         <tr>
                             <td>Franela Clásica Negra</td>
                             <td>franelas</td>
@@ -188,50 +243,81 @@
                             <td>50</td>
                             <td>Editar / Eliminar</td>
                         </tr>
+
                     </tbody>
+
                 </table>
+
             </div>
+
         </section>
 
         <!-- VENTAS -->
         <section class="page-section" id="sales">
+
             <div class="page-header">
+
                 <div>
-                    <p>Procesa ventas, selecciona clientes y revisa el carrito.</p>
+                    <p>
+                        Procesa ventas, selecciona clientes y revisa el carrito.
+                    </p>
                 </div>
+
             </div>
 
             <div class="row-2 sales-grid">
+
                 <div class="box sales-box">
+
                     <label>Cliente</label>
+
                     <select id="salesClientSelect">
                         <option value="">Seleccionar cliente...</option>
                     </select>
 
                     <label>Productos</label>
+
                     <div class="product-cards" id="productCardsContainer">
+
                         <div class="product-card">
                             <strong>Cargando productos...</strong>
                         </div>
+
                     </div>
+
                 </div>
 
                 <div class="box cart-box">
+
                     <h3>Carrito</h3>
+
                     <div id="cartContent">
-                        <p>Seleccione un producto para agregar al carrito.</p>
+                        <p>
+                            Seleccione un producto para agregar al carrito.
+                        </p>
                     </div>
+
                 </div>
+
             </div>
+
         </section>
 
         <!-- CLIENTES -->
         <section class="page-section" id="clients">
+
             <div class="page-header">
+
                 <div>
-                    <p>Gestiona tu base de clientes y agrega nuevos contactos.</p>
+                    <p>
+                        Gestiona tu base de clientes y agrega nuevos contactos.
+                    </p>
                 </div>
-                <button class="btn secondary">+ Agregar Cliente</button>
+
+                <button class="btn secondary">
+                    + Agregar Cliente
+                </button>
+
             </div>
 
             <div class="filter-row">
@@ -239,21 +325,32 @@
             </div>
 
             <div class="card-grid" id="clientsList">
+
                 <div class="client-card">
+
                     <div class="client-avatar">C</div>
+
                     <div>
                         <h3>Cargando clientes...</h3>
                     </div>
+
                 </div>
+
             </div>
+
         </section>
 
         <!-- FACTURAS -->
         <section class="page-section" id="invoices">
+
             <div class="page-header">
+
                 <div>
-                    <p>Revisa y descarga las facturas de ventas más recientes.</p>
+                    <p>
+                        Revisa y descarga las facturas de ventas más recientes.
+                    </p>
                 </div>
+
             </div>
 
             <div class="filter-row">
@@ -261,7 +358,9 @@
             </div>
 
             <div class="table-card">
+
                 <table class="data-table">
+
                     <thead>
                         <tr>
                             <th>N° Factura</th>
@@ -272,7 +371,9 @@
                             <th>Acciones</th>
                         </tr>
                     </thead>
+
                     <tbody id="invoicesTableBody">
+
                         <tr>
                             <td>INV-001</td>
                             <td>Juan Pérez</td>
@@ -281,104 +382,246 @@
                             <td>$64.97</td>
                             <td>Ver Detalle</td>
                         </tr>
+
                     </tbody>
+
                 </table>
+
             </div>
+
         </section>
 
         <!-- CONFIGURACIÓN -->
+        <!-- CONFIGURACIÓN -->
         <section class="page-section" id="settings">
+
             <div class="page-header">
+
                 <div>
-                    <p>Administra las preferencias del sistema y la seguridad.</p>
+                    <p>
+                        Administra las preferencias del sistema y la seguridad.
+                    </p>
                 </div>
+
             </div>
 
+            <!-- TABS -->
             <div class="settings-tabs">
-                <button class="tab-button active settings-tab-button" data-config="general">General</button>
-                <button class="tab-button settings-tab-button" data-config="seguridad">Seguridad</button>
-                <button class="tab-button settings-tab-button" data-config="usuarios">Usuarios</button>
-                <button class="tab-button settings-tab-button" data-config="historial">Historial</button>
+
+                <button class="tab-button active settings-tab-button"
+                        data-config="general">
+
+                    General
+
+                </button>
+
+                <button class="tab-button settings-tab-button"
+                        data-config="seguridad">
+
+                    Seguridad
+
+                </button>
+
+                <button class="tab-button settings-tab-button"
+                        data-config="usuarios">
+
+                    Usuarios
+
+                </button>
+
+                <button class="tab-button settings-tab-button"
+                        data-config="historial">
+
+                    Historial
+
+                </button>
+
             </div>
 
+            <!-- CONTENIDO -->
             <div class="settings-content">
+
+                <!-- GENERAL -->
                 <div class="settings-panel active" id="general">
+
                     <div class="box settings-card">
+
                         <h3>Apariencia</h3>
-                        <p id="themeModeText">Modo claro</p>
+
+                        <p id="themeModeText">
+                            Modo claro
+                        </p>
+
                         <label class="switch">
-                            <input type="checkbox" id="darkModeToggle" />
+
+                            <input type="checkbox"
+                                id="darkModeToggle" />
+
                             <span class="slider"></span>
+
                         </label>
+
                     </div>
+
                 </div>
 
+                <!-- SEGURIDAD -->
                 <div class="settings-panel" id="seguridad">
+
                     <div class="box settings-card">
-                        <h3>Cambiar Contraseña</h3>
-                        <label>Contraseña Actual</label>
-                        <input type="password" placeholder="Contraseña actual" />
-                        <label>Nueva Contraseña</label>
-                        <input type="password" placeholder="Nueva contraseña" />
-                        <label>Confirmar Nueva Contraseña</label>
-                        <input type="password" placeholder="Confirmar contraseña" />
-                        <button class="btn secondary">Actualizar Contraseña</button>
+
+                        <h3>
+                            Cambiar Contraseña
+                        </h3>
+
+                        <label>
+                            Contraseña Actual
+                        </label>
+
+                        <input type="password"
+                            placeholder="Contraseña actual" />
+
+                        <label>
+                            Nueva Contraseña
+                        </label>
+
+                        <input type="password"
+                            placeholder="Nueva contraseña" />
+
+                        <label>
+                            Confirmar Nueva Contraseña
+                        </label>
+
+                        <input type="password"
+                            placeholder="Confirmar contraseña" />
+
+                        <button class="btn secondary">
+                            Actualizar Contraseña
+                        </button>
+
                     </div>
+
                     <div class="box settings-card">
-                        <h3>Cambiar Correo Electrónico</h3>
-                        <label>Correo Actual</label>
-                        <input type="email" value="admin@sublime.com" readonly />
-                        <label>Nuevo Correo Electrónico</label>
-                        <input type="email" placeholder="Nuevo correo" />
-                        <button class="btn secondary">Actualizar Correo</button>
+
+                        <h3>
+                            Cambiar Correo Electrónico
+                        </h3>
+
+                        <label>
+                            Correo Actual
+                        </label>
+
+                        <input type="email"
+                            value="admin@sublime.com"
+                            readonly />
+
+                        <label>
+                            Nuevo Correo Electrónico
+                        </label>
+
+                        <input type="email"
+                            placeholder="Nuevo correo" />
+
+                        <button class="btn secondary">
+                            Actualizar Correo
+                        </button>
+
                     </div>
+
                 </div>
 
+                <!-- USUARIOS -->
                 <div class="settings-panel" id="usuarios">
+
                     <div class="box settings-card">
-                        <h3>Crear Usuario Trabajador</h3>
-                        <label>Nombre Completo</label>
-                        <input type="text" placeholder="Nombre completo" />
-                        <label>Correo Electrónico</label>
-                        <input type="email" placeholder="Correo electrónico" />
-                        <label>Contraseña</label>
-                        <input type="password" placeholder="Contraseña" />
-                        <button class="btn secondary">Crear Usuario</button>
+
+                        <h3>
+                            Crear Usuario Trabajador
+                        </h3>
+
+                        <label>
+                            Nombre Completo
+                        </label>
+
+                        <input type="text"
+                            placeholder="Nombre completo" />
+
+                        <label>
+                            Correo Electrónico
+                        </label>
+
+                        <input type="email"
+                            placeholder="Correo electrónico" />
+
+                        <label>
+                            Contraseña
+                        </label>
+
+                        <input type="password"
+                            placeholder="Contraseña" />
+
+                        <button class="btn secondary">
+                            Crear Usuario
+                        </button>
+
                     </div>
+
                     <div class="box settings-card">
-                        <h3>Usuarios Trabajadores</h3>
+
+                        <h3>
+                            Usuarios Trabajadores
+                        </h3>
+
                         <table class="data-table">
+
                             <thead>
+
                                 <tr>
                                     <th>Nombre</th>
                                     <th>Correo</th>
                                     <th>Rol</th>
                                     <th>Fecha Creación</th>
                                 </tr>
+
                             </thead>
+
                             <tbody>
+
                                 <tr>
                                     <td>Juan Pérez</td>
                                     <td>juan@sublime.com</td>
                                     <td>Trabajador</td>
                                     <td>2026-01-15</td>
                                 </tr>
+
                                 <tr>
                                     <td>María García</td>
                                     <td>maria@sublime.com</td>
                                     <td>Trabajador</td>
                                     <td>2026-02-20</td>
                                 </tr>
+
                             </tbody>
+
                         </table>
+
                     </div>
+
                 </div>
 
+                <!-- HISTORIAL -->
                 <div class="settings-panel" id="historial">
+
                     <div class="box settings-card">
-                        <h3>Historial de Inicio de Sesión</h3>
+
+                        <h3>
+                            Historial de Inicio de Sesión
+                        </h3>
+
                         <table class="data-table">
+
                             <thead>
+
                                 <tr>
                                     <th>Usuario</th>
                                     <th>Correo</th>
@@ -386,8 +629,11 @@
                                     <th>Dirección IP</th>
                                     <th>Estado</th>
                                 </tr>
+
                             </thead>
+
                             <tbody>
+
                                 <tr>
                                     <td>Administrador</td>
                                     <td>admin@sublime.com</td>
@@ -395,6 +641,7 @@
                                     <td>192.168.1.100</td>
                                     <td>Exitoso</td>
                                 </tr>
+
                                 <tr>
                                     <td>Juan Pérez</td>
                                     <td>juan@sublime.com</td>
@@ -402,57 +649,141 @@
                                     <td>192.168.1.101</td>
                                     <td>Exitoso</td>
                                 </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </section>
 
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
     </main>
+
+</div>
+
+<!-- =========================
+     MODAL GENERAR REPORTE
+========================= -->
+
+<div class="report-modal" id="modal">
+
+    <div class="report-modal-content">
+
+        <!-- HEADER -->
+        <div class="report-header">
+
+            <div>
+
+                <h2>
+                    Generar Reporte de Ventas
+                </h2>
+
+                <p>
+                    Selecciona el tipo de reporte y formato que deseas generar
+                </p>
+
+            </div>
+
+            <span class="close-modal" id="closeModal">
+                &times;
+            </span>
+
+        </div>
+
+        <!-- TIPO -->
+        <div class="report-group">
+
+            <label>
+                Tipo de Reporte
+            </label>
+
+            <select id="tipoReporte">
+
+                <option value="mensual">
+                    Mensual
+                </option>
+
+                <option value="diario">
+                    Diario
+                </option>
+
+                <option value="anual">
+                    Anual
+                </option>
+
+            </select>
+
+        </div>
+
+        <!-- FORMATO -->
+        <div class="report-group">
+
+            <label>
+                Formato
+            </label>
+
+            <select id="formato">
+
+                <option value="pdf">
+                    PDF
+                </option>
+
+                <option value="excel">
+                    Excel
+                </option>
+
+            </select>
+
+        </div>
+
+        <!-- INFO -->
+        <div class="report-info">
+
+            <div class="report-icon">
+                📅
+            </div>
+
+            <div>
+
+                <h4 id="reportTitle">
+                    Reporte Mensual
+                </h4>
+
+                <p id="descripcion">
+
+                    Incluirá: métricas generales,
+                    top productos,
+                    ventas detalladas
+                    y análisis de inventario
+
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- BOTONES -->
+        <div class="report-actions">
+
+            <button id="cancelar" class="btn-cancel">
+                Cancelar
+            </button>
+
+            <button id="descargar" class="btn-download">
+                ⬇ Descargar
+            </button>
+
+        </div>
+
+    </div>
+
 </div>
 
 <script src="script.js"></script>
 
-<!-- MODAL -->
-<div class="modal" id="modal">
-  <div class="modal-content">
-
-    <div class="modal-header">
-      <h2>Generar Reporte de Ventas</h2>
-      <span id="closeModal">&times;</span>
-    </div>
-
-    <p class="subtitle">
-      Selecciona el tipo de reporte y formato que deseas generar
-    </p>
-
-    <label>Tipo de Reporte</label>
-    <select id="tipoReporte">
-      <option value="mensual">Mensual</option>
-      <option value="semanal">Semanal</option>
-      <option value="diario">Diario</option>
-    </select>
-
-    <label>Formato</label>
-    <select id="formato">
-      <option value="pdf">PDF</option>
-      <option value="excel">Excel</option>
-    </select>
-
-    <div class="info-box">
-       <b>Reporte</b>
-      <p id="descripcion">
-        Incluye métricas generales, top productos y análisis
-      </p>
-    </div>
-
-    <div class="modal-actions">
-      <button id="cancelar">Cancelar</button>
-      <button id="descargar" class="download">Descargar</button>
-    </div>
-
-  </div>
-</div>
 </body>
 </html>
