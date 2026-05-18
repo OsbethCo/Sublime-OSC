@@ -157,36 +157,42 @@ body{
     width:23px;
     height:23px;
     object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(41%) sepia(6%) saturate(4408%) hue-rotate(132deg) brightness(95%) contrast(84%);
 }
 
 .icon-inv{
     width:23px;
     height:23px;
     object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(41%) sepia(6%) saturate(4408%) hue-rotate(132deg) brightness(95%) contrast(84%);
 }
 
 .icon-sales{
     width:20px;
     height:20px;
     object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(41%) sepia(6%) saturate(4408%) hue-rotate(132deg) brightness(95%) contrast(84%);
 }
 
 .icon-clients{
     width:20px;
     height:20px;
     object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(41%) sepia(6%) saturate(4408%) hue-rotate(132deg) brightness(95%) contrast(84%);
 }
 
 .icon-invoices{
     width:20px;
     height:20px;
     object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(41%) sepia(6%) saturate(4408%) hue-rotate(132deg) brightness(95%) contrast(84%);
 }
 
 .icon-settings{
     width:20px;
     height:20px;
     object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(41%) sepia(6%) saturate(4408%) hue-rotate(132deg) brightness(95%) contrast(84%);
 }
 
 /* =========================
@@ -221,6 +227,46 @@ body{
     display: flex;
     justify-content: flex-end;
     margin-bottom: -30px;
+}
+
+.card-icon1{
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(23%) sepia(93%) saturate(2961%) hue-rotate(220deg) brightness(101%) contrast(85%);
+}
+
+.card-icon2{
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(48%) sepia(61%) saturate(597%) hue-rotate(90deg) brightness(92%) contrast(93%);
+}
+
+.card-icon3{
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(79%) sepia(57%) saturate(3522%) hue-rotate(5deg) brightness(101%) contrast(94%);
+}
+
+.card-icon4{
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    filter: brightness(0) saturate(100%) invert(43%) sepia(22%) saturate(4375%) hue-rotate(304deg) brightness(96%) contrast(93%);
+}
+
+.card-icon{
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+}
+
+.card-icon{
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
 }
 
 .card-icon{
