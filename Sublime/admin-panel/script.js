@@ -873,7 +873,6 @@ function actualizarDescripcionReporte() {
 
         descripcion.textContent =
             'Incluirá: ventas del día, ingresos diarios, productos vendidos y movimientos recientes';
-
     }
 
     if (tipo === 'anual') {
@@ -883,7 +882,24 @@ function actualizarDescripcionReporte() {
 
         descripcion.textContent =
             'Incluirá: resumen anual, ganancias totales, productos más vendidos y análisis financiero';
+    }
 
+    if (tipo === 'semanal') {
+
+        reportTitle.textContent =
+            'Reporte Semanal';
+
+        descripcion.textContent=
+            'Incluirá: ventas de la semana, ingresos semanales, productos destacados y análisis de tendencias';
+    }
+
+    if (tipo === 'personalizado') {
+
+        reportTitle.textContent =
+            'Reporte Personalizado';
+        
+        descripcion.textContent =
+            'Permite seleccionar métricas específicas, rango de fechas y filtros personalizados para generar un reporte a medida';
     }
 
 }
