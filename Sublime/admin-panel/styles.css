@@ -111,7 +111,7 @@ body{
 }
 
 .btn{
-    background:#2563eb;
+    background:#2c7a7b;
     color:white;
     border:none;
     padding:10px 16px;
@@ -387,7 +387,7 @@ body{
 
 .progress div{
     height:100%;
-    background:#2563eb;
+    background:#2c7a7b;
     border-radius:999px;
     width:0;
     transition:width 1.5s ease;
