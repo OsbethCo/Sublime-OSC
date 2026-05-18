@@ -497,13 +497,15 @@ body{
 .filter-row input,
 .page-section input,
 .page-section select{
-    width:100%;
+    width:40%;
+    height:50px;
     padding:12px 14px;
     border:1px solid #e2e8f0;
     border-radius:12px;
     background:#f8fafc;
     font-size:14px;
     outline:none;
+    display: flex;
 }
 
 /* =========================
