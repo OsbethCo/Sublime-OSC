@@ -99,6 +99,18 @@ CREATE TABLE categorias (
 );
 
 -- =========================================================
+-- TASAS DE CAMBIO
+-- =========================================================
+
+CREATE TABLE tasas_cambio (
+    id_tasa INTEGER PRIMARY KEY AUTOINCREMENT,
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+    tasa DECIMAL(12,4) NOT NULL,
+    fuente VARCHAR(100),
+    activa INTEGER DEFAULT 1
+);
+
+-- =========================================================
 -- PRODUCTOS
 -- =========================================================
 
@@ -114,6 +126,7 @@ CREATE TABLE productos (
     FOREIGN KEY (id_categoria)
     REFERENCES categorias(id_categoria)
 );
+
 
 -- =========================================================
 -- IMÁGENES PRODUCTOS
@@ -439,15 +452,30 @@ CREATE TABLE verificaciones_pago (
 
 CREATE TABLE facturas (
     id_factura INTEGER PRIMARY KEY AUTOINCREMENT,
+
     id_venta INTEGER NOT NULL UNIQUE,
+
+    id_tasa INTEGER,
+
     numero_factura VARCHAR(50) UNIQUE,
+
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+
     subtotal DECIMAL(10,2),
+
+    porcentaje_iva DECIMAL(5,2),
+
     impuesto DECIMAL(10,2),
-    total DECIMAL(10,2),
+
+    total_usd DECIMAL(10,2),
+
+    total_bs DECIMAL(12,2),
 
     FOREIGN KEY (id_venta)
-    REFERENCES ventas(id_venta)
+    REFERENCES ventas(id_venta),
+
+    FOREIGN KEY (id_tasa)
+    REFERENCES tasas_cambio(id_tasa)
 );
 
 -- =========================================================
@@ -538,6 +566,108 @@ CREATE TABLE caja (
     monto DECIMAL(10,2),
     descripcion TEXT,
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =========================================================
+-- SERVICIOS DE PERSONALIZACIÓN
+-- =========================================================
+
+CREATE TABLE servicios_personalizacion (
+    id_servicio INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    precio_usd DECIMAL(10,2) NOT NULL,
+    activo INTEGER DEFAULT 1
+);
+
+-- =========================================================
+-- SERVICIOS DE PERSONALIZACIÓN
+-- =========================================================
+
+CREATE TABLE servicios_personalizacion (
+    id_servicio INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    precio_usd DECIMAL(10,2) NOT NULL,
+    activo INTEGER DEFAULT 1
+);
+
+-- =========================================================
+-- DETALLE PERSONALIZACIÓN
+-- =========================================================
+
+CREATE TABLE detalle_personalizacion (
+    id_detalle INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    id_personalizacion INTEGER NOT NULL,
+
+    id_servicio INTEGER NOT NULL,
+
+    cantidad INTEGER DEFAULT 1,
+
+    precio_unitario DECIMAL(10,2),
+
+    subtotal DECIMAL(10,2),
+
+    FOREIGN KEY (id_personalizacion)
+    REFERENCES personalizaciones(id_personalizacion),
+
+    FOREIGN KEY (id_servicio)
+    REFERENCES servicios_personalizacion(id_servicio)
+);
+
+-- =========================================================
+-- DETALLE DISEÑO
+-- =========================================================
+
+CREATE TABLE detalle_diseno (
+    id_detalle INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    id_personalizacion INTEGER NOT NULL,
+
+    id_diseno INTEGER NOT NULL,
+
+    precio DECIMAL(10,2),
+
+    FOREIGN KEY (id_personalizacion)
+    REFERENCES personalizaciones(id_personalizacion),
+
+    FOREIGN KEY (id_diseno)
+    REFERENCES servicios_diseno(id_diseno)
+);
+
+-- =========================================================
+-- DETALLE DISEÑO
+-- =========================================================
+
+CREATE TABLE detalle_diseno (
+    id_detalle INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    id_personalizacion INTEGER NOT NULL,
+
+    id_diseno INTEGER NOT NULL,
+
+    precio DECIMAL(10,2),
+
+    FOREIGN KEY (id_personalizacion)
+    REFERENCES personalizaciones(id_personalizacion),
+
+    FOREIGN KEY (id_diseno)
+    REFERENCES servicios_diseno(id_diseno)
+);
+
+-- =========================================================
+-- CONFIGURACIÓN GENERAL
+-- =========================================================
+
+CREATE TABLE configuracion (
+    id_configuracion INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    iva_default DECIMAL(5,2) DEFAULT 16,
+
+    moneda_principal VARCHAR(10) DEFAULT 'USD',
+
+    tasa_actual DECIMAL(12,4)
 );
 
 -- =========================================================
