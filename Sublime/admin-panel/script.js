@@ -802,13 +802,13 @@ if (darkModeToggle) {
 
     });
 
-    if (localStorage.getItem('darkMode') === 'true') {
+    const savedDarkMode = localStorage.getItem('darkMode');
 
-        darkModeToggle.checked = true;
+    const enableDark = savedDarkMode !== 'false';
 
-        applyDarkMode(true);
+    darkModeToggle.checked = enableDark;
 
-    }
+    applyDarkMode(enableDark);
 
 }
 

@@ -1,3 +1,35 @@
+:root{
+    --bg:#e8ebe9;
+    --surface:#ffffff;
+    --surface-2:#f4f6f5;
+    --border:#d5ddd8;
+    --text:#111a13;
+    --muted:#5e6b62;
+    --primary:#22c55e;
+    --primary-hover:#16a34a;
+    --danger:#ef4444;
+    --info-bg:#eef8f0;
+    --info-border:#bbf0c9;
+    --info-text:#15803d;
+    --shadow:rgba(0,0,0,0.06);
+}
+
+body.dark{
+    --bg:#0a0e0c;
+    --surface:#121815;
+    --surface-2:#1a221d;
+    --border:#243029;
+    --text:#e8f0ea;
+    --muted:#93a399;
+    --primary:#22c55e;
+    --primary-hover:#16a34a;
+    --danger:#ef4444;
+    --info-bg:#0f1f14;
+    --info-border:#1a4028;
+    --info-text:#4ade80;
+    --shadow:rgba(0,0,0,0.35);
+}
+
 *{
     margin:0;
     padding:0;
@@ -6,8 +38,9 @@
 }
 
 body{
-    background:#e2e2e2;
-    color:#111827;
+    background:var(--bg);
+    color:var(--text);
+    transition:background .3s,color .3s;
 }
 
 /* =========================
@@ -26,7 +59,7 @@ body{
 
 .sidebar{
     width:220px;
-    background:white;
+    background:var(--surface);
     height:100vh;
     padding:20px;
     position:sticky;
@@ -36,7 +69,7 @@ body{
 }
 
 .logo{
-    color:#2c7a7b;
+    color:var(--primary);
 }
 
 .sidebar ul{
@@ -58,11 +91,11 @@ body{
 }
 
 .sidebar ul li:hover{
-    background:#dbeafe;
+    background:rgba(34,197,94,.12);
 }
 
 .sidebar ul li.active{
-    background:#44b9bb;
+    background:var(--primary);
     color:white;
 }
 
@@ -70,7 +103,7 @@ body{
 .sidebar .logout-btn{
     align-self:stretch;
     margin-top:auto;
-    background:#2c7a7b;
+    background:var(--primary);
     color:white;
     border:none;
     padding:10px 14px;
@@ -116,7 +149,7 @@ body{
 }
 
 .btn{
-    background:#2c7a7b;
+    background:var(--primary);
     color:white;
     border:none;
     padding:10px 16px;
@@ -131,7 +164,7 @@ body{
 }
 
 .btn.secondary{
-    background:#2c7a7b;
+    background:var(--primary);
     margin-top:10px;
 }
 
@@ -164,42 +197,42 @@ body{
     width:23px;
     height:23px;
     object-fit: contain;
-    filter: brightness(0) saturate(100%) invert(41%) sepia(6%) saturate(4408%) hue-rotate(132deg) brightness(95%) contrast(84%);
+    filter: brightness(0) saturate(100%) invert(64%) sepia(58%) saturate(514%) hue-rotate(86deg) brightness(91%) contrast(86%);
 }
 
 .icon-inv{
     width:23px;
     height:23px;
     object-fit: contain;
-    filter: brightness(0) saturate(100%) invert(41%) sepia(6%) saturate(4408%) hue-rotate(132deg) brightness(95%) contrast(84%);
+    filter: brightness(0) saturate(100%) invert(64%) sepia(58%) saturate(514%) hue-rotate(86deg) brightness(91%) contrast(86%);
 }
 
 .icon-sales{
     width:20px;
     height:20px;
     object-fit: contain;
-    filter: brightness(0) saturate(100%) invert(41%) sepia(6%) saturate(4408%) hue-rotate(132deg) brightness(95%) contrast(84%);
+    filter: brightness(0) saturate(100%) invert(64%) sepia(58%) saturate(514%) hue-rotate(86deg) brightness(91%) contrast(86%);
 }
 
 .icon-clients{
     width:20px;
     height:20px;
     object-fit: contain;
-    filter: brightness(0) saturate(100%) invert(41%) sepia(6%) saturate(4408%) hue-rotate(132deg) brightness(95%) contrast(84%);
+    filter: brightness(0) saturate(100%) invert(64%) sepia(58%) saturate(514%) hue-rotate(86deg) brightness(91%) contrast(86%);
 }
 
 .icon-invoices{
     width:20px;
     height:20px;
     object-fit: contain;
-    filter: brightness(0) saturate(100%) invert(41%) sepia(6%) saturate(4408%) hue-rotate(132deg) brightness(95%) contrast(84%);
+    filter: brightness(0) saturate(100%) invert(64%) sepia(58%) saturate(514%) hue-rotate(86deg) brightness(91%) contrast(86%);
 }
 
 .icon-settings{
     width:20px;
     height:20px;
     object-fit: contain;
-    filter: brightness(0) saturate(100%) invert(41%) sepia(6%) saturate(4408%) hue-rotate(132deg) brightness(95%) contrast(84%);
+    filter: brightness(0) saturate(100%) invert(64%) sepia(58%) saturate(514%) hue-rotate(86deg) brightness(91%) contrast(86%);
 }
 
 /* =========================
@@ -213,10 +246,10 @@ body{
 }
 
 .card{
-    background:white;
+    background:var(--surface);
     padding:20px;
     border-radius:16px;
-    box-shadow:0 2px 10px rgba(0,0,0,0.05);
+    box-shadow:0 2px 10px var(--shadow);
     position: relative;
     overflow: hidden;
 }
@@ -227,7 +260,7 @@ body{
 
 .card span{
     font-size:13px;
-    color:#6b7280;
+    color:var(--muted);
 }
 
 .card-top{
@@ -284,7 +317,7 @@ body{
 
 .icon{
     font-size:30px;
-    background:#eef4ff;
+    background:var(--surface-2);
     padding:12px;
     border-radius:12px;
 }
@@ -311,10 +344,10 @@ body{
 ========================= */
 
 .box{
-    background:white;
+    background:var(--surface);
     padding:20px;
     border-radius:16px;
-    box-shadow:0 2px 10px rgba(0,0,0,0.05);
+    box-shadow:0 2px 10px var(--shadow);
 }
 
 .box h3{
@@ -352,7 +385,7 @@ body{
 
 .users-content .icon{
     font-size:30px;
-    background:#eef4ff;
+    background:var(--surface-2);
     padding:12px;
     border-radius:12px;
 }
@@ -414,14 +447,14 @@ body{
 .progress{
     flex:1;
     height:8px;
-    background:#e5e7eb;
+    background:var(--border);
     border-radius:999px;
     overflow:hidden;
 }
 
 .progress div{
     height:100%;
-    background:#2c7a7b;
+    background:var(--primary);
     border-radius:999px;
     width:0;
     transition:width 1.5s ease;
@@ -439,22 +472,22 @@ body{
 .data-table{
     width:100%;
     border-collapse:collapse;
-    background:white;
+    background:var(--surface);
     border-radius:16px;
     overflow:hidden;
-    box-shadow:0 2px 10px rgba(0,0,0,0.05);
+    box-shadow:0 2px 10px var(--shadow);
 }
 
 .data-table th,
 .data-table td{
     text-align:left;
     padding:16px;
-    border-bottom:1px solid #f1f5f9;
+    border-bottom:1px solid var(--border);
     font-size:14px;
 }
 
 .data-table th{
-    background:#f8fafc;
+    background:var(--surface-2);
     font-weight:600;
 }
 
@@ -489,9 +522,10 @@ body{
     width:40%;
     height:50px;
     padding:12px 14px;
-    border:1px solid #e2e8f0;
+    border:1px solid var(--border);
     border-radius:12px;
-    background:#f8fafc;
+    background:var(--surface-2);
+    color:var(--text);
     font-size:14px;
     outline:none;
     display: flex;
@@ -509,7 +543,7 @@ body{
 
 .client-card,
 .product-card{
-    background:white;
+    background:var(--surface);
     padding:20px;
     border-radius:16px;
     box-shadow:0 2px 12px rgba(0,0,0,0.05);
@@ -522,8 +556,8 @@ body{
     width:50px;
     height:50px;
     border-radius:50%;
-    background:#fde8d1;
-    color:#2c7a7b;
+    background:rgba(34,197,94,.15);
+    color:var(--primary);
     display:flex;
     justify-content:center;
     align-items:center;
@@ -543,7 +577,7 @@ body{
 
 .sales-box,
 .cart-box{
-    background:white;
+    background:var(--surface);
     padding:20px;
     border-radius:16px;
     box-shadow:0 2px 10px rgba(0,0,0,0.05);
@@ -561,7 +595,7 @@ body{
 }
 
 .add-cart{
-    background:#2563eb;
+    background:var(--primary);
     color:white;
     border:none;
     padding:10px 14px;
@@ -576,7 +610,7 @@ body{
 .settings-tabs{
     display:flex;
     gap:12px;
-    background:white;
+    background:var(--surface);
     padding:12px;
     border-radius:16px;
     box-shadow:0 2px 10px rgba(0,0,0,0.05);
@@ -588,7 +622,7 @@ body{
 .tab-button{
     border:none;
     background:transparent;
-    color:#475569;
+    color:var(--muted);
     padding:12px 18px;
     border-radius:12px;
     cursor:pointer;
@@ -597,10 +631,10 @@ body{
 }
 
 .tab-button.active{
-    background:white;
-    color:#111827;
-    box-shadow:0 2px 10px rgba(0,0,0,0.06);
-    border:1px solid #e5e7eb;
+    background:var(--surface-2);
+    color:var(--text);
+    box-shadow:0 2px 10px var(--shadow);
+    border:1px solid var(--border);
 }
 
 .settings-content .settings-panel{
@@ -637,7 +671,7 @@ body{
     position:absolute;
     cursor:pointer;
     inset:0;
-    background:#d1d5db;
+    background:var(--border);
     border-radius:999px;
     transition:0.3s;
 }
@@ -655,7 +689,7 @@ body{
 }
 
 input:checked + .slider{
-    background:#2563eb;
+    background:var(--primary);
 }
 
 input:checked + .slider:before{
@@ -689,7 +723,7 @@ input:checked + .slider:before{
 .report-modal-content{
     width:100%;
     max-width:420px;
-    background:#fff;
+    background:var(--surface);
     border-radius:20px;
     padding:24px;
     transform:translateY(20px);
@@ -714,25 +748,25 @@ input:checked + .slider:before{
 .report-header h2{
     font-size:28px;
     font-weight:700;
-    color:#111827;
+    color:var(--text);
     margin-bottom:8px;
 }
 
 .report-header p{
     font-size:15px;
     line-height:1.5;
-    color:#6b7280;
+    color:var(--muted);
 }
 
 .close-modal{
     font-size:24px;
     cursor:pointer;
-    color:#6b7280;
+    color:var(--muted);
     transition:0.2s;
 }
 
 .close-modal:hover{
-    color:#111827;
+    color:var(--text);
 }
 
 /* GROUPS */
@@ -746,26 +780,26 @@ input:checked + .slider:before{
     margin-bottom:10px;
     font-size:15px;
     font-weight:600;
-    color:#374151;
+    color:var(--text);
 }
 
 .report-group select{
     width:100%;
     height:52px;
     border:none;
-    background:#f3f4f6;
+    background:var(--surface-2);
     border-radius:12px;
     padding:0 16px;
     font-size:15px;
     outline:none;
-    color:#111827;
+    color:var(--text);
 }
 
 /* INFO */
 
 .report-info{
-    background:#eef4ff;
-    border:1px solid #dbeafe;
+    background:var(--info-bg);
+    border:1px solid var(--info-border);
     border-radius:14px;
     padding:16px;
     display:flex;
@@ -780,11 +814,11 @@ input:checked + .slider:before{
 
 .report-info h4{
     margin-bottom:6px;
-    color:#1e3a8a;
+    color:var(--info-text);
 }
 
 .report-info p{
-    color:#2563eb;
+    color:var(--info-text);
     font-size:14px;
     line-height:1.5;
 }
@@ -807,90 +841,42 @@ input:checked + .slider:before{
 }
 
 .btn-cancel{
-    background:white;
-    border:1px solid #d1d5db !important;
+    background:var(--surface-2);
+    color:var(--text);
+    border:1px solid var(--border) !important;
 }
 
 .btn-download{
-    background:#2563eb;
+    background:var(--primary);
     color:white;
 }
 
 /* =========================
-   DARK MODE
+   DARK MODE (icon filters)
 ========================= */
 
-body.dark{
-    background:#0f172a;
-    color:#e2e8f0;
+body.dark .icon-dash,
+body.dark .icon-inv,
+body.dark .icon-sales,
+body.dark .icon-clients,
+body.dark .icon-invoices,
+body.dark .icon-settings{
+    filter:brightness(0) invert(1) opacity(.65);
 }
 
-body.dark .sidebar,
-body.dark .box,
-body.dark .card,
-body.dark .data-table,
-body.dark .settings-tabs,
-body.dark .client-card,
-body.dark .product-card,
-body.dark .sales-box,
-body.dark .cart-box,
-body.dark .report-modal-content{
-    background:#111827;
-    box-shadow:0 2px 10px rgba(0,0,0,0.35);
+body.dark .sidebar ul li.active img{
+    filter:brightness(0) invert(1);
 }
 
-body.dark .sidebar li{
-    color:#cbd5e1;
+body.dark .card-icon1,
+body.dark .card-icon2,
+body.dark .card-icon3,
+body.dark .card-icon4{
+    filter:brightness(0) invert(1) opacity(.55);
 }
 
-body.dark .sidebar li.active{
-    background:#1f2937;
-}
-
-body.dark .data-table th{
-    background:#1f2937;
-}
-
-body.dark .data-table td,
-body.dark .data-table th{
-    border-color:#334155;
-}
-
-body.dark input,
-body.dark select{
-    background:#1f2937;
-    border-color:#334155;
-    color:#f8fafc;
-}
-
-body.dark .report-header h2,
-body.dark .report-group label{
-    color:#f8fafc;
-}
-
-body.dark .report-header p{
-    color:#94a3b8;
-}
-
-body.dark .report-group select{
-    background:#1f2937;
-    color:#f8fafc;
-}
-
-body.dark .report-info{
-    background:#172554;
-    border-color:#1d4ed8;
-}
-
-body.dark .report-info h4,
-body.dark .report-info p{
-    color:#bfdbfe;
-}
-
-body.dark .btn-cancel{
-    background:#1f2937;
-    color:white;
-    border-color:#334155 !important;
+body.dark .icon-user{
+    filter:brightness(0) invert(1) opacity(.55);
 }
 
 /* =========================
@@ -1011,7 +997,7 @@ body.dark .btn-cancel{
 .product-modal-content{
     width:100%;
     max-width:520px;
-    background:white;
+    background:var(--surface);
     border-radius:22px;
     padding:24px;
     transform:translateY(20px);
@@ -1036,18 +1022,18 @@ body.dark .btn-cancel{
 
 .product-header h2{
     font-size:26px;
-    color:#111827;
+    color:var(--text);
 }
 
 .close-product-modal{
     font-size:28px;
     cursor:pointer;
-    color:#6b7280;
+    color:var(--muted);
     transition:0.2s;
 }
 
 .close-product-modal:hover{
-    color:#111827;
+    color:var(--text);
 }
 
 /* FORM */
@@ -1061,16 +1047,16 @@ body.dark .btn-cancel{
 .product-group label{
     margin-bottom:10px;
     font-weight:600;
-    color:#374151;
+    color:var(--text);
 }
 
 .product-group input,
 .product-group textarea{
     width:100%;
     padding:14px;
-    border:1px solid #e2e8f0;
+    border:1px solid var(--border);
     border-radius:12px;
-    background:#f8fafc;
+    background:var(--surface-2);
     font-size:14px;
     outline:none;
     transition:0.2s;
@@ -1083,8 +1069,8 @@ body.dark .btn-cancel{
 
 .product-group input:focus,
 .product-group textarea:focus{
-    border-color:#2c7a7b;
-    background:white;
+    border-color:var(--primary);
+    background:var(--surface);
 }
 
 /* ROW */
@@ -1114,46 +1100,17 @@ body.dark .btn-cancel{
 }
 
 .btn-cancel-product{
-    background:white;
-    border:1px solid #d1d5db !important;
+    background:var(--surface-2);
+    color:var(--text);
+    border:1px solid var(--border) !important;
 }
 
 .btn-save-product{
-    background:#2c7a7b;
+    background:var(--primary);
     color:white;
 }
 
-/* =========================
-   DARK MODE PRODUCT MODAL
-========================= */
 
-body.dark .product-modal-content{
-    background:#111827;
-}
-
-body.dark .product-header h2,
-body.dark .product-group label{
-    color:#f8fafc;
-}
-
-body.dark .product-group input,
-body.dark .product-group textarea{
-    background:#1f2937;
-    border-color:#334155;
-    color:#f8fafc;
-}
-
-body.dark .product-group input:focus,
-body.dark .product-group textarea:focus{
-    background:#111827;
-    border-color:#2c7a7b;
-}
-
-body.dark .btn-cancel-product{
-    background:#1f2937;
-    color:white;
-    border-color:#334155 !important;
-}
 
 /* RESPONSIVE */
 
@@ -1188,12 +1145,12 @@ body.dark .btn-cancel-product{
     height:60px;
     object-fit:cover;
     border-radius:12px;
-    border:1px solid #e5e7eb;
+    border:1px solid var(--border);
 }
 
 .inventory-description{
     font-size:12px;
-    color:#6b7280;
+    color:var(--muted);
     margin-top:4px;
     max-width:250px;
 }
@@ -1214,40 +1171,20 @@ body.dark .btn-cancel-product{
 }
 
 .edit-btn{
-    background:#dbeafe;
-    color:#1d4ed8;
+    background:rgba(34,197,94,.12);
+    color:var(--primary);
 }
 
 .delete-btn{
-    background:#fee2e2;
-    color:#dc2626;
+    background:rgba(239,68,68,.1);
+    color:var(--danger);
 }
 
 .table-btn:hover{
     opacity:0.9;
 }
 
-/* =========================
-   DARK MODE INVENTORY
-========================= */
 
-body.dark .inventory-image{
-    border-color:#334155;
-}
-
-body.dark .inventory-description{
-    color:#94a3b8;
-}
-
-body.dark .edit-btn{
-    background:#1e3a8a;
-    color:#bfdbfe;
-}
-
-body.dark .delete-btn{
-    background:#7f1d1d;
-    color:#fecaca;
-}
 
 /* =========================
    MODAL CLIENTE
@@ -1276,7 +1213,7 @@ body.dark .delete-btn{
 .client-modal-content{
     width:100%;
     max-width:500px;
-    background:white;
+    background:var(--surface);
     border-radius:22px;
     padding:24px;
     box-shadow:0 10px 40px rgba(0,0,0,0.15);
@@ -1296,11 +1233,11 @@ body.dark .delete-btn{
 .close-client-modal{
     font-size:28px;
     cursor:pointer;
-    color:#6b7280;
+    color:var(--muted);
 }
 
 .close-client-modal:hover{
-    color:#111827;
+    color:var(--text);
 }
 
 .client-group{
@@ -1316,9 +1253,10 @@ body.dark .delete-btn{
 
 .client-group input{
     padding:12px;
-    border:1px solid #e2e8f0;
+    border:1px solid var(--border);
     border-radius:10px;
-    background:#f8fafc;
+    background:var(--surface-2);
+    color:var(--text);
 }
 
 .client-actions{
@@ -1329,8 +1267,9 @@ body.dark .delete-btn{
 
 .btn-cancel-client{
     flex:1;
-    background:white;
-    border:1px solid #d1d5db;
+    background:var(--surface-2);
+    color:var(--text);
+    border:1px solid var(--border);
     padding:12px;
     border-radius:10px;
     cursor:pointer;
@@ -1338,7 +1277,7 @@ body.dark .delete-btn{
 
 .btn-save-client{
     flex:1;
-    background:#2c7a7b;
+    background:var(--primary);
     color:white;
     border:none;
     padding:12px;
@@ -1346,25 +1285,16 @@ body.dark .delete-btn{
     cursor:pointer;
 }
 
-/* DARK MODE */
 
-body.dark .client-modal-content{
-    background:#111827;
-    color:white;
-}
-
-body.dark .client-group input{
-    background:#1f2937;
-    color:white;
-    border-color:#334155;
-}
 
 #usdRate{
     width:100%;
     padding:12px;
     margin-top:10px;
     border-radius:10px;
-    border:1px solid #e2e8f0;
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    color:var(--text);
 }
 
 /* =========================================
@@ -1396,7 +1326,7 @@ body.dark .client-group input{
     width:520px;
     max-width:95%;
 
-    background:white;
+    background:var(--surface);
 
     border-radius:24px;
 
@@ -1422,7 +1352,7 @@ body.dark .client-group input{
 
     font-weight:700;
 
-    color:#111827;
+    color:var(--text);
 }
 
 /* CAMPOS */
@@ -1439,7 +1369,7 @@ body.dark .client-group input{
 
     font-size:15px;
 
-    color:#6b7280;
+    color:var(--muted);
 
     font-weight:500;
 }
@@ -1452,13 +1382,17 @@ body.dark .client-group input{
 
     padding:14px 16px;
 
-    border:1px solid #d1d5db;
+    border:1px solid var(--border);
 
     border-radius:14px;
 
     font-size:15px;
 
     outline:none;
+
+    background:var(--surface-2);
+
+    color:var(--text);
 
     transition:.2s;
 }
@@ -1467,10 +1401,10 @@ body.dark .client-group input{
 .form-group select:focus,
 .form-group textarea:focus{
 
-    border-color:#2563eb;
+    border-color:var(--primary);
 
     box-shadow:
-        0 0 0 4px rgba(37,99,235,.1);
+        0 0 0 4px rgba(34,197,94,.15);
 }
 
 .form-group textarea{
@@ -1495,7 +1429,7 @@ body.dark .client-group input{
 
     flex:1;
 
-    background:#10b981;
+    background:var(--primary);
 
     color:white;
 
@@ -1513,16 +1447,16 @@ body.dark .client-group input{
 }
 
 .save-btn:hover{
-    background:#0ea371;
+    background:var(--primary-hover);
 }
 
 .cancel-btn{
 
     flex:1;
 
-    background:#e5e7eb;
+    background:var(--surface-2);
 
-    color:#374151;
+    color:var(--text);
 
     border:none;
 
@@ -1538,14 +1472,14 @@ body.dark .client-group input{
 }
 
 .cancel-btn:hover{
-    background:#d1d5db;
+    background:var(--border);
 }
 
 /* BOTONES DE LA TABLA */
 
 .btn-edit{
 
-    background:#2563eb;
+    background:var(--primary);
 
     color:white;
 
@@ -1562,7 +1496,7 @@ body.dark .client-group input{
 
 .btn-delete{
 
-    background:#ef4444;
+    background:var(--danger);
 
     color:white;
 
@@ -1579,40 +1513,7 @@ body.dark .client-group input{
     margin-left:6px;
 }
 
-/* DARK MODE */
 
-body.dark .edit-modal-content{
-
-    background:#111827;
-}
-
-body.dark .edit-modal-content h2{
-
-    color:#f8fafc;
-}
-
-body.dark .form-group label{
-
-    color:#cbd5e1;
-}
-
-body.dark .form-group input,
-body.dark .form-group select,
-body.dark .form-group textarea{
-
-    background:#1f2937;
-
-    border:1px solid #374151;
-
-    color:white;
-}
-
-body.dark .cancel-btn{
-
-    background:#374151;
-
-    color:white;
-}
 
 img{
     max-width:100%;
@@ -1640,7 +1541,8 @@ img{
 .invoice-content{
     width:900px;
     max-width:95%;
-    background:white;
+    background:var(--surface);
+    color:var(--text);
     border-radius:20px;
     overflow:hidden;
 }
@@ -1656,7 +1558,7 @@ img{
 }
 
 .brand{
-    color:#10b981;
+    color:var(--primary);
 }
 
 .invoice-title{
@@ -1677,7 +1579,7 @@ img{
 .invoice-table th,
 .invoice-table td{
     padding:14px;
-    border-bottom:1px solid #ddd;
+    border-bottom:1px solid var(--border);
 }
 
 .invoice-total{
@@ -1690,7 +1592,7 @@ img{
 }
 
 .invoice-total span:last-child{
-    color:#10b981;
+    color:var(--primary);
 }
 
 .invoice-footer{
@@ -1702,7 +1604,7 @@ img{
     display:flex;
     gap:15px;
     padding:20px;
-    background:#f5f5f5;
+    background:var(--surface-2);
 }
 
 .invoice-actions button{
@@ -1715,12 +1617,14 @@ img{
 }
 
 #downloadInvoiceBtn{
-    background:#10b981;
+    background:var(--primary);
     color:white;
 }
 
 #closeInvoiceBtn{
-    background:#d1d5db;
+    background:var(--surface-2);
+    color:var(--text);
+    border:1px solid var(--border);
 }
 
 /* ==================================
@@ -1731,7 +1635,7 @@ img{
 
     position:relative;
 
-    background:white;
+    background:var(--surface);
 
     padding:25px;
 
@@ -1748,7 +1652,7 @@ img{
 
     border-radius:50%;
 
-    background:#10b981;
+    background:var(--primary);
 
     color:white;
 
@@ -1804,12 +1708,12 @@ img{
 
 .edit-client-btn{
 
-    color:#10b981;
+    color:var(--primary);
 }
 
 .delete-client-btn{
 
-    color:#ef4444;
+    color:var(--danger);
 }
 
 .client-modal{
@@ -1838,7 +1742,7 @@ img{
 
     width:500px;
 
-    background:white;
+    background:var(--surface);
 
     padding:25px;
 
@@ -1860,9 +1764,13 @@ img{
 
     padding:12px;
 
-    border:1px solid #ddd;
+    border:1px solid var(--border);
 
     border-radius:12px;
+
+    background:var(--surface-2);
+
+    color:var(--text);
 }
 
 .client-modal-actions{
@@ -1889,12 +1797,14 @@ img{
 
 #saveClientBtn{
 
-    background:#10b981;
+    background:var(--primary);
 
     color:white;
 }
 
 #cancelClientBtn{
 
-    background:#d1d5db;
+    background:var(--surface-2);
+
+    color:var(--text);
 }
