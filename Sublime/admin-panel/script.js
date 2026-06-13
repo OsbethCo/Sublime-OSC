@@ -58,24 +58,40 @@ function formatCurrency(value) {
     return `Bs ${bs.toFixed(2)} (${usd.toFixed(2)}$)`;
 }
 
-/* =========================
-   ANIMACIÓN BARRAS
-========================= */
+function showToast(
+    message,
+    type = 'success'
+){
 
-function renderBarsAnimation() {
+    const container =
+        document.getElementById(
+            'toastContainer'
+        );
+    if(!container) return;
 
-    document.querySelectorAll('.progress div').forEach(bar => {
+    const toast = 
+    document.createElement('div');
 
-        let width = bar.style.width;
+    toast.className =
+        `toast ${type}`;
 
-        bar.style.width = '0';
+    toast.textContent = 
+        message;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+
+        toast.style.animation =
+            'slideOut .3s ease forwards';
 
         setTimeout(() => {
-            bar.style.width = width;
+
+            toast.remove();
+
         }, 300);
 
-    });
-
+    }, 3000);
 }
 
 /* =========================
@@ -92,6 +108,8 @@ async function loadDashboard() {
 
         dashboardData = response;
 
+        dashboardData.categories = stats.categories || [];
+        dashboardData.monthly = stats.monthly || [];
         dashboardData.totalIncome = stats.totalIncome || 0;
 
         document.getElementById('salesCount').textContent =
@@ -106,14 +124,14 @@ async function loadDashboard() {
         document.getElementById('clientCount').textContent =
             stats.totalClients || 0;
 
-        if (response.categories?.length) {
-            createDonutChart(response.categories);
-        }
+        if (dashboardData.categories?.length) {
 
-        if (response.monthly?.length) {
-            createLineChart(response.monthly);
+            createDonutChart(dashboardData.categories);
         }
+        if (dashboardData.monthly?.length) {
 
+            createLineChart(dashboardData.monthly);
+        }
         if (response.topProducts?.length) {
             updateTopProducts(response.topProducts);
         }
@@ -159,13 +177,39 @@ function updateTopProducts(products) {
         }).join('')}
     `;
 
+    rednerBarsAnimation();
+
 }
 
 /* =========================
-   CHARTS
+   ANIMACIÓN BARRAS
 ========================= */
 
+function renderBarsAnimation() {
+
+    document.querySelectorAll('.progress div').forEach(bar => {
+
+        let width = bar.style.width;
+
+        bar.style.width = '0';
+
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 300);
+
+    });
+
+}
+
+
+function isDarkMode() {
+
+    return document.body.classList.contains('dark');
+}
+
 function createDonutChart(categories) {
+
+    if (!donut) return;
 
     const labels = categories.map(
         item => item.categoria || 'Sin categoría'
@@ -176,17 +220,20 @@ function createDonutChart(categories) {
     );
 
     const colors = [
-        '#3b82f6',
+        '#4f8cff',
         '#8b5cf6',
+        '#ec4899',
         '#f59e0b',
-        '#10b981',
-        '#ef4444'
+        '#00d084',
+        '#ef4444',
+        '#14b8a6'
     ];
 
     if (donutChart) {
 
         donutChart.data.labels = labels;
         donutChart.data.datasets[0].data = values;
+        donutChart.data.datasets[0].backgroundColor = colors.slice(0, values.length);
 
         donutChart.update();
 
@@ -205,7 +252,9 @@ function createDonutChart(categories) {
             datasets: [{
                 data: values,
                 backgroundColor: colors.slice(0, values.length),
-                borderWidth: 0
+                borderWidth: 2,
+                borderColor: '#0b1730',
+                hoverOffset: 10
             }]
 
         },
@@ -213,10 +262,17 @@ function createDonutChart(categories) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '70%',
+            cutout: '68%',
             plugins: {
                 legend: {
                     display: false
+                },
+                tooltip: {
+                    backgroundColor: isDarkMode() ? '#081326' : '#ffffff',
+                    titleColor: isDarkMode() ? '#fff' : '#172033',
+                    bodyColor: isDarkMode() ? '#fff' : '#172033',
+                    borderColor: '#15346e',
+                    borderWidth: 1
                 }
             }
         }
@@ -226,6 +282,8 @@ function createDonutChart(categories) {
 }
 
 function createLineChart(monthly) {
+
+    if (!line) return;
 
     const months = monthly.map(item => item.mes || '00');
 
@@ -264,21 +322,25 @@ function createLineChart(monthly) {
                 {
                     label: 'Ganancias',
                     data: totals,
-                    borderColor: '#22c55e',
-                    backgroundColor: 'rgba(34,197,94,0.1)',
+                    borderColor: '#00d084',
+                    backgroundColor: 'rgba(0,208,132,.15)',
                     fill: true,
-                    tension: 0.4,
-                    pointRadius: 0
+                    tension: 0.45,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    borderWidth: 3
                 },
 
                 {
                     label: 'Gastos',
                     data: gastos,
-                    borderColor: '#ef4444',
-                    backgroundColor: 'rgba(239,68,68,0.1)',
+                    borderColor: '#ff4d4f',
+                    backgroundColor: 'rgba(255,77,79,.08)',
                     fill: true,
-                    tension: 0.4,
-                    pointRadius: 0
+                    tension: 0.45,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    borderWidth: 2
                 }
 
             ]
@@ -298,21 +360,43 @@ function createLineChart(monthly) {
 
             plugins: {
                 legend: {
-                    position: 'bottom'
-                }
+                    position: 'bottom',
+
+                    labels: {
+                        color: isDarkMode() ? '#ffffff' : '#172033',
+                        usePointStyle: true,
+                    }
+                },
+
+                tooltip: {
+                    backgroundColor: isDarkMode() ? '#081326' : '#ffffff',
+                    titleColor: isDarkMode() ? '#fff' : '#172033',
+                    bodyColor: isDarkMode() ? '#fff' : '#172033',
+                    borderColor: '#15346e',
+                    borderWidth: 1
+                },
             },
+
+            
 
             scales: {
 
                 x: {
+                    
+                    ticks: {
+                        color: isDarkMode() ? '#9fb3d1' : '#6b7280'
+                    },
                     grid: {
-                        display: false
+                        color: 'rgba(159,179,209,.10)'
                     }
                 },
 
                 y: {
+                    ticks: {
+                        color: isDarkMode() ? '#9fb3d1' : '#6b7280'
+                    },
                     grid: {
-                        color: '#eee'
+                        color: 'rgba(159,179,209,.15)'
                     }
                 }
 
@@ -671,8 +755,6 @@ function renderCart() {
 
 window.addEventListener('DOMContentLoaded', async () => {
 
-    renderBarsAnimation();
-
     await Promise.all([
         loadDashboard(),
         loadInventory(),
@@ -769,27 +851,34 @@ toggleReportButton('dashboard');
 const darkModeToggle =
     document.getElementById('darkModeToggle');
 
-const themeModeText =
-    document.getElementById('themeModeText');
+const themeModeText = null;
 
 function applyDarkMode(enabled) {
 
     document.body.classList.toggle('dark', enabled);
-
-    if (themeModeText) {
-
-        themeModeText.textContent =
-            enabled
-                ? 'Modo oscuro'
-                : 'Modo claro';
-
-    }
 
     localStorage.setItem(
         'darkMode',
         enabled ? 'true' : 'false'
     );
 
+    if (dashboardData.categories?.length) {
+
+        donutChart?.destroy();
+        donutChart = null;
+        createDonutChart(
+            dashboardData.categories
+        );
+}
+
+    if (dashboardData.monthly?.length) {
+        lineChart?.destroy();
+        lineChart = null;
+
+        createLineChart(
+            dashboardData.monthly
+        );
+    }
 }
 
 if (darkModeToggle) {
@@ -802,19 +891,19 @@ if (darkModeToggle) {
 
     });
 
-    const savedDarkMode = localStorage.getItem('darkMode');
+    const savedDarkMode = 
+        localStorage.getItem('darkMode');
 
-    const enableDark = savedDarkMode !== 'false';
+    const enableDark = 
+        savedDarkMode !== 'false';
 
-    darkModeToggle.checked = enableDark;
+    darkModeToggle.checked =
+     enableDark;
 
     applyDarkMode(enableDark);
 
 }
 
-/* =========================
-   MODAL REPORTE
-========================= */
 
 const modal =
     document.getElementById('modal');
@@ -1325,7 +1414,7 @@ document.addEventListener('click', e => {
 ========================= */
 
 const clientModal =
-    document.getElementById('clientModal');
+    document.getElementById('editClientModal');
 
 const openClientModal =
     document.getElementById('openClientModal');
@@ -1402,6 +1491,8 @@ if (clientForm) {
         const card = document.createElement('div');
 
         card.classList.add('client-card-modern');
+
+        const initial = name.charAt(0).toUpperCase();
 
         card.innerHTML = `
 
@@ -1486,12 +1577,58 @@ if (saveUsdBtn) {
 
         localStorage.setItem('usdRate', usdRate);
 
-        alert('Tasa actualizada correctamente');
+        showToast('Tasa actualizada correctamente', 'success');
 
         location.reload(); // recarga para aplicar cambios
 
     });
 
+}
+
+const ivaRateInput = 
+    document.getElementById('ivaRate');
+
+    if(ivaRateInput){
+        ivaRateInput.value =
+            localStorage.getItem('ivaRate') || '16';
+    }
+
+const saveIvaRateBtn =
+    document.getElementById('saveIvaRate');
+
+if(saveIvaRateBtn){
+
+    saveIvaRateBtn.addEventListener('click', () => {
+
+        const iva =
+            parseFloat(
+                document.getElementById('ivaRate').value
+            );
+
+        if(isNaN(iva) || iva < 0){
+
+            alert('Ingrese un IVA válido');
+            return;
+
+        }
+
+        localStorage.setItem(
+            'ivaRate',
+            iva
+        );
+
+        showToast(
+            `IVA actualizado a ${iva}%`, 'success'
+        );
+
+    });
+
+}
+
+function getCurrentIVA(){
+    return parseFloat(
+        localStorage.getItem('ivaRate')
+    ) || 16;
 }
 
 async function openEditProduct(id){
@@ -1565,15 +1702,6 @@ document
 
 });
 
-document
-    .getElementById('cancelEditBtn')
-    .addEventListener('click',()=>{
-
-    document
-        .getElementById('editProductModal')
-        .classList.remove('active');
-
-});
 
 const editModal =
     document.getElementById('editProductModal');
@@ -1588,21 +1716,19 @@ editModal.addEventListener('click',(e)=>{
 
 });
 
-window.openEditProduct = async function(id){
 
-    console.log("Editar producto:", id);
+const invoiceModal =
+    document.getElementById('invoiceModal');
 
-    const modal =
-        document.getElementById("editProductModal");
+invoiceModal.addEventListener('click',(e)=>{
 
-    if(!modal){
-        console.error("No existe editProductModal");
-        return;
+    if(e.target === invoiceModal){
+
+        invoiceModal.classList.remove('active');
+
     }
 
-    modal.classList.add("active");
-
-}
+});
 
 window.openInvoiceModal = async function(id){
 
@@ -1653,15 +1779,19 @@ window.openInvoiceModal = async function(id){
 
 }
 
-document
-.getElementById('closeInvoiceBtn')
-.addEventListener('click',()=>{
+const closeInvoiceBtn = 
+    document.getElementById('closeInvoiceBtn');
+
+if(closeInvoiceBtn){
+    closeInvoiceBtn.addEventListener('click',()=>{
 
     document
         .getElementById('invoiceModal')
         .classList.remove('active');
 
 });
+
+}
 
 document
 .getElementById('downloadInvoiceBtn')
@@ -1707,11 +1837,9 @@ window.openEditClient = async function(id){
 
     }catch(error){
 
-        console.error(error);
+        console.error(error);}
 
     }
-
-}
 
 document
 .getElementById('saveClientBtn')
@@ -1787,3 +1915,4 @@ document
         .classList.remove('active');
 
 });
+

@@ -41,6 +41,17 @@
                 <img src="./img/configuracion.png" alt="Configuración" class="icon-settings"/>Configuración</li>
         </ul>
 
+        <div class="sidebar-theme-toggle">
+
+            <span>☀️</span>
+            <label class="switch">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="slider"></span>
+            </label>
+
+            <span>🌙</span>
+        </div>
+        
         <button class="btn secondary logout-btn" id="logoutBtn">
             Cerrar Sesión
         </button>
@@ -72,46 +83,6 @@
                 <!-- IZQUIERDA -->
                 <div class="left">
 
-                    <!-- CARDS -->
-                    <div class="cards">
-
-                        <div class="card blue">
-                            <div class="card-top">
-                                <img src="./img/ventas.png" alt="Ventas" class="card-icon1" />
-                            </div>
-                            <p>Ventas</p>
-                            <h2 id="salesCount">3</h2>
-                            <span>Total vendidas</span>
-                        </div>
-
-                        <div class="card green">
-                            <div class="card-top">
-                                <img src="./img/ingresos.png" alt="Ingresos" class="card-icon2" />
-                            </div>
-                            <p>Ingresos</p>
-                            <h2 id="incomeValue">$199</h2>
-                            <span>Total ganado</span>
-                        </div>
-
-                        <div class="card yellow">
-                            <div class="card-top">
-                                <img src="./img/stock.png" alt="Stock" class="card-icon3" />
-                            </div>
-                            <p>Stock</p>
-                            <h2 id="stockValue">8</h2>
-                            <span>Productos</span>
-                        </div>
-
-                        <div class="card pink">
-                            <div class="card-top">
-                                <img src="./img/client.png" alt="Clientes" class="card-icon4" />
-                            </div>
-                            <p>Clientes</p>
-                            <h2 id="clientCount">3</h2>
-                            <span>Registrados</span>
-                        </div>
-
-                    </div>
 
                     <!-- USUARIOS + INVENTARIO -->
                     <div class="row-2">
@@ -467,25 +438,6 @@
                 <!-- GENERAL -->
                 <div class="settings-panel active" id="general">
 
-                    <div class="box settings-card">
-
-                        <h3>Apariencia</h3>
-
-                        <p id="themeModeText">
-                            Modo claro
-                        </p>
-
-                        <label class="switch">
-
-                            <input type="checkbox"
-                                id="darkModeToggle" />
-
-                            <span class="slider"></span>
-
-                        </label>
-
-                    </div>
-
                     <!-- TASA DEL DÓLAR -->
                     <div class="box settings-card">
 
@@ -503,6 +455,23 @@
                             Guardar Tasa
                         </button>
 
+                    </div>
+
+                    <div class="box settings-card">
+                        <h3>IVA</h3>
+                        <p>Configura el porcentaje de IVA aplicado a las ventas</p>
+                        <label>IVA (%):</label>
+                        <input
+                            type="number"
+                            id="ivaRate"
+                            min="0"
+                            max="100"
+                            step="0.01"
+                            placeholder="Ej: 16"/>
+
+                        <button class="btn secondary" id="saveIvaRate">
+                            Guardar IVA
+                        </button>
                     </div>
 
                 </div>
@@ -1174,12 +1143,19 @@
 
             </table>
 
-            <div class="invoice-total">
-
-                <span>TOTAL</span>
-
-                <span id="invoiceTotal">$0.00</span>
-
+            <div class="invoice-sumanry">
+                <p>
+                    Subtotal:
+                    <span id="invoiceSubtotal">$0.00</span>
+                </p>
+                <p>
+                    IVA:
+                    <span id="invoiceIVA">$0.00</span>
+                </p>
+                <h3>
+                    Total:
+                    <span id="invoiceTotal">$0.00</span>
+                </h3>
             </div>
 
             <div class="invoice-footer">
@@ -1212,7 +1188,7 @@
 
 </div>
 
-<div id="clientModal" class="client-modal">
+<div id="editClientModal" class="client-modal">
 
     <div class="client-modal-content">
 
@@ -1251,6 +1227,8 @@
     </div>
 
 </div>
+
+<div id="toastContainer"></div>
 
 <script src="script.js"></script>
 
