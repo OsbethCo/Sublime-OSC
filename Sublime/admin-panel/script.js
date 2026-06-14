@@ -138,7 +138,7 @@ async function loadDashboard() {
 
     } catch (error) {
 
-        console.error('Error cargando dashboard:', error);
+        showToast('Error cargando dashboard:', 'error');
 
     }
 
@@ -177,7 +177,7 @@ function updateTopProducts(products) {
         }).join('')}
     `;
 
-    rednerBarsAnimation();
+    renderBarsAnimation();
 
 }
 
@@ -424,8 +424,15 @@ async function loadInventory() {
 
         if (!body) return;
 
-        body.innerHTML = response.inventory.map(item => `
+        body.innerHTML = response.inventory.map(item => {
+            if (item.stock <= 5) {
+                showToast(
+                    `Stock bajo: ${item.nombre}`,
+                    'error'
+                );
+            }
 
+            return `
             <tr>
 
                 <td>${item.nombre}</td>
@@ -449,13 +456,14 @@ async function loadInventory() {
                 </td>
             </tr>
 
-        `).join('');
+        `;
+        }).join('');
 
     } catch (error) {
 
-        console.error(
+        showToast(
             'Error cargando inventario:',
-            error
+            'error'
         );
 
     }
@@ -529,9 +537,9 @@ async function loadClients() {
 
     } catch (error) {
 
-        console.error(
+        showToast(
             'Error cargando clientes:',
-            error
+            'error'
         );
 
     }
@@ -593,9 +601,9 @@ async function loadInvoices() {
 
     } catch (error) {
 
-        console.error(
+        showToast(
             'Error cargando facturas:',
-            error
+            'error'
         );
 
     }
@@ -679,9 +687,9 @@ async function loadSalesData() {
 
     } catch (error) {
 
-        console.error(
+        showToast(
             'Error cargando datos de ventas:',
-            error
+            'error'
         );
 
     }
@@ -1274,8 +1282,8 @@ window.addEventListener('click', e => {
 
         cerrarProductModal();
 
+        
     }
-
 });
 
 /* =========================
@@ -1383,6 +1391,8 @@ if (productForm) {
 
         cerrarProductModal();
 
+        showToast('Producto agregado al inventario', 'success');
+
     });
 
 }
@@ -1403,6 +1413,7 @@ document.addEventListener('click', e => {
 
             row.remove();
 
+            showToast('Producto eliminado del inventario', 'error');
         }
 
     }
@@ -1434,7 +1445,10 @@ if (openClientModal) {
 
     openClientModal.addEventListener('click', () => {
 
-        clientModal.classList.add('active');
+        const clientModal = document.getElementById('clientModal');
+        if (clientModal) {
+            clientModal.classList.add('active');
+        }
 
     });
 
@@ -1444,7 +1458,10 @@ if (openClientModal) {
 
 function cerrarClientModal() {
 
-    clientModal.classList.remove('active');
+    const clientModal = document.getElementById('clientModal');
+    if (clientModal) {
+        clientModal.classList.remove('active');
+    }
 
 }
 
@@ -1545,6 +1562,7 @@ if (clientForm) {
 
         cerrarClientModal();
 
+        showToast('Cliente agregado correctamente', 'success');
     });
 
 }
@@ -1571,7 +1589,7 @@ if (saveUsdBtn) {
         usdRate = Number(usdInput.value);
 
         if (!usdRate || usdRate <= 0) {
-            alert('Ingresa una tasa válida');
+            showToast('Ingresa una tasa válida', 'error');
             return;
         }
 
@@ -1607,7 +1625,7 @@ if(saveIvaRateBtn){
 
         if(isNaN(iva) || iva < 0){
 
-            alert('Ingrese un IVA válido');
+            showToast('Ingrese un IVA válido', 'error');
             return;
 
         }
@@ -1684,9 +1702,27 @@ document
 
         loadInventory();
 
+        const productsCache =
+            JSON.parse(
+                localStorage.getItem('productsCache')
+            ) || [];
+
+        productsCache.push({
+            nombre: productName,
+            precio: productPrice,
+            stock: productStock
+        });
+
+        localStorage.setItem(
+            'productsCache',
+            JSON.stringify(productsCache)
+        );
+
+        showToast('Producto actualizado correctamente', 'success');
+
     }catch(error){
 
-        alert(error.message);
+        showToast(error.message, 'error');
 
     }
 
@@ -1832,7 +1868,7 @@ window.openEditClient = async function(id){
         ).value = client.direccion;
 
         document
-            .getElementById('clientModal')
+            .getElementById('editClientModal')
             .classList.add('active');
 
     }catch(error){
@@ -1880,7 +1916,7 @@ document
     });
 
     document
-        .getElementById('clientModal')
+        .getElementById('editClientModal')
         .classList.remove('active');
 
     loadClients();
@@ -1904,6 +1940,22 @@ window.deleteClient = async function(id){
 
     loadClients();
 
+    const clientsCache =
+        JSON.parse(
+            localStorage.getItem('clientsCache')
+        ) || [];
+
+    clientsCache.push({
+        nombre: clientName,
+        correo: clientEmail,
+        telefono: clientPhone
+    });
+
+    localStorage.setItem(
+        'clientsCache',
+        JSON.stringify(clientsCache)
+    );
+
 }
 
 document
@@ -1911,8 +1963,16 @@ document
 .addEventListener('click',()=>{
 
     document
-        .getElementById('clientModal')
+        .getElementById('editClientModal')
         .classList.remove('active');
 
 });
 
+function deleteClientCard(btn){
+    btn.closest('.client-card-mordern').remove();
+
+    showToast(
+        'Cliente eliminado',
+        'error'
+    );
+}
