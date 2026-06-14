@@ -1,167 +1,15 @@
-from flask import Flask, request, jsonify, redirect
-import sqlite3
 import os
+import sys
 
-try:
-    import mysql.connector
-except ImportError:
-    mysql = None
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+APP_DIR = os.path.abspath(os.path.join(BASE_DIR, '..', 'pagina-web-sublime'))
+if APP_DIR not in sys.path:
+    sys.path.insert(0, APP_DIR)
 
-app = Flask(__name__, static_folder='.', static_url_path='')
+from app import app  # noqa: E402
 
-# Configuración de base de datos
-BD_DIR = os.path.join(os.path.dirname(__file__), 'BD')
-DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
-DB_SQL_FILE = os.path.join(BD_DIR, 'database.sql')
-SQLITE_DB_FILE = os.path.join(BD_DIR, 'database.db')
-SQLITE_FALLBACK = os.path.join(DATA_DIR, 'sublime.db')
-
-MYSQL_CONFIG = {
-    'host': os.getenv('MYSQL_HOST', ''),
-    'port': int(os.getenv('MYSQL_PORT', 3306)),
-    'user': os.getenv('MYSQL_USER', ''),
-    'password': os.getenv('MYSQL_PASSWORD', ''),
-    'database': os.getenv('MYSQL_DATABASE', 'sublime_db'),
-}
-USE_MYSQL = bool(MYSQL_CONFIG['host'] and MYSQL_CONFIG['user'] and MYSQL_CONFIG['password'])
-
-if not os.path.exists(DATA_DIR):
-    os.makedirs(DATA_DIR, exist_ok=True)
-
-
-def create_sqlite_db(path):
-    if not os.path.exists(DB_SQL_FILE):
-        raise RuntimeError('No se encontró BD/database.sql para crear la base SQLite.')
-    conn = sqlite3.connect(path)
-    conn.execute('PRAGMA foreign_keys = ON')
-    with open(DB_SQL_FILE, 'r', encoding='utf-8') as f:
-        conn.executescript(f.read())
-    conn.commit()
-    conn.close()
-
-
-def create_mysql_db():
-    if mysql is None:
-        raise RuntimeError('mysql-connector-python no está instalado.')
-    conn = mysql.connector.connect(
-        host=MYSQL_CONFIG['host'],
-        port=MYSQL_CONFIG['port'],
-        user=MYSQL_CONFIG['user'],
-        password=MYSQL_CONFIG['password'],
-    )
-    cursor = conn.cursor()
-    cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{MYSQL_CONFIG['database']}` DEFAULT CHARACTER SET utf8mb4")
-    cursor.close()
-    conn.close()
-
-    conn = mysql.connector.connect(**MYSQL_CONFIG)
-    cursor = conn.cursor()
-    if not os.path.exists(DB_SQL_FILE):
-        raise RuntimeError('No se encontró BD/database.sql para crear la base MySQL.')
-    with open(DB_SQL_FILE, 'r', encoding='utf-8') as f:
-        for _ in cursor.execute(f.read(), multi=True):
-            pass
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-
-def get_db():
-    if USE_MYSQL:
-        if mysql is None:
-            raise RuntimeError('mysql-connector-python no está instalado.')
-        return mysql.connector.connect(**MYSQL_CONFIG)
-
-    db_path = SQLITE_DB_FILE if os.path.exists(SQLITE_DB_FILE) else SQLITE_FALLBACK
-    if not os.path.exists(db_path):
-        create_sqlite_db(db_path)
-
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-def init_db():
-    if USE_MYSQL:
-        create_mysql_db()
-        conn = get_db()
-        cursor = conn.cursor()
-    else:
-        if not os.path.exists(SQLITE_DB_FILE) and not os.path.exists(SQLITE_FALLBACK):
-            create_sqlite_db(SQLITE_DB_FILE)
-        conn = get_db()
-        conn.execute('PRAGMA foreign_keys = ON')
-        cursor = conn.cursor()
-
-    cursor.execute('SELECT COUNT(*) FROM roles')
-    role_count = cursor.fetchone()[0]
-    if role_count == 0:
-        if USE_MYSQL:
-            cursor.execute('INSERT INTO roles (nombre) VALUES (%s), (%s)', ('Administrador', 'Trabajador'))
-        else:
-            cursor.execute('INSERT INTO roles (nombre) VALUES (?), (?)', ('Administrador', 'Trabajador'))
-
-    cursor.execute('SELECT COUNT(*) FROM usuarios')
-    user_count = cursor.fetchone()[0]
-    if user_count == 0:
-        if USE_MYSQL:
-            cursor.execute(
-                'INSERT INTO usuarios (nombre, correo, contraseña, id_rol) VALUES (%s, %s, %s, %s)',
-                ('Administrador', 'admin@sublime.com', 'admin123', 1)
-            )
-        else:
-            cursor.execute(
-                'INSERT INTO usuarios (nombre, correo, contraseña, id_rol) VALUES (?, ?, ?, ?)',
-                ('Administrador', 'admin@sublime.com', 'admin123', 1)
-            )
-
-    seed_sample_sale(cursor)
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-
-
-def seed_sample_sale(cursor):
-    """Crea una venta de ejemplo si todavía no hay ninguna registrada,
-    para que el botón "Ver Detalle" de facturas tenga datos que mostrar."""
-    ph = '%s' if USE_MYSQL else '?'
-
-    cursor.execute('SELECT COUNT(*) FROM ventas')
-    if cursor.fetchone()[0] > 0:
-        return
-
-    cursor.execute('SELECT id_producto, precio_venta FROM productos ORDER BY id_producto LIMIT 2')
-    productos = cursor.fetchall()
-    if len(productos) < 1:
-        return
-
-    cursor.execute('SELECT id_cliente FROM clientes ORDER BY id_cliente LIMIT 1')
-    cliente = cursor.fetchone()
-    if cliente:
-        cliente_id = cliente[0]
-    else:
-        cursor.execute(
-            f'INSERT INTO clientes (nombre, telefono, correo, direccion) VALUES ({ph}, {ph}, {ph}, {ph})',
-            ('Juan Pérez', '0412-0000000', 'juan.perez@sublime.com', 'Av. Principal, Local 1')
-        )
-        cliente_id = cursor.lastrowid
-
-    items = [(prod_id, float(precio), 2 if i == 0 else 1) for i, (prod_id, precio) in enumerate(productos)]
-    total = sum(precio * cantidad for _, precio, cantidad in items)
-
-    cursor.execute(
-        f'INSERT INTO ventas (id_cliente, total) VALUES ({ph}, {ph})',
-        (cliente_id, total)
-    )
-    venta_id = cursor.lastrowid
-
-    for prod_id, precio, cantidad in items:
-        cursor.execute(
-            f'INSERT INTO detalle_ventas (id_venta, id_producto, cantidad, precio_unitario) '
-            f'VALUES ({ph}, {ph}, {ph}, {ph})',
-            (venta_id, prod_id, cantidad, precio)
-        )
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
 
 
 init_db()
@@ -236,9 +84,9 @@ def dashboard():
     
     stats = {}
     stats['totalSales'] = conn.execute('SELECT COUNT(*) AS total FROM ventas').fetchone()['total']
-    stats['totalClients'] = conn.execute('SELECT COUNT(*) AS total FROM clientes').fetchone()['total']
-    stats['totalProducts'] = conn.execute('SELECT COUNT(*) AS total FROM productos').fetchone()['total']
-    stats['totalStock'] = conn.execute('SELECT IFNULL(SUM(stock), 0) AS total FROM productos').fetchone()['total']
+    stats['totalClients'] = conn.execute('SELECT COUNT(*) AS total FROM clientes WHERE activo = 1').fetchone()['total']
+    stats['totalProducts'] = conn.execute('SELECT COUNT(*) AS total FROM productos WHERE activo = 1').fetchone()['total']
+    stats['totalStock'] = conn.execute('SELECT IFNULL(SUM(stock_actual), 0) AS total FROM inventario').fetchone()['total']
     stats['totalIncome'] = conn.execute('SELECT IFNULL(SUM(total), 0) AS total FROM ventas').fetchone()['total']
     
     top_products = conn.execute(
@@ -248,13 +96,16 @@ def dashboard():
     ).fetchall()
     
     categories = conn.execute(
-        'SELECT c.nombre AS categoria, IFNULL(SUM(p.stock), 0) AS stock '
-        'FROM categorias c LEFT JOIN productos p ON p.id_categoria = c.id_categoria '
+        'SELECT c.nombre AS categoria, IFNULL(SUM(i.stock_actual), 0) AS stock '
+        'FROM categorias c '
+        'LEFT JOIN productos p ON p.id_categoria = c.id_categoria '
+        'LEFT JOIN inventario i ON i.id_producto = p.id_producto '
         'GROUP BY c.id_categoria ORDER BY stock DESC LIMIT 5'
     ).fetchall()
     
+    date_function = "DATE_FORMAT(fecha, '%m')" if USE_MYSQL else "strftime('%m', fecha)"
     monthly = conn.execute(
-        "SELECT strftime('%m', fecha) AS mes, IFNULL(SUM(total), 0) AS total "
+        f'SELECT {date_function} AS mes, IFNULL(SUM(total), 0) AS total '
         'FROM ventas GROUP BY mes ORDER BY mes ASC'
     ).fetchall()
     
@@ -271,8 +122,11 @@ def dashboard():
 def inventory():
     conn = get_db()
     inventory = conn.execute(
-        'SELECT p.id_producto, p.nombre, p.precio_venta AS precio, p.stock, c.nombre AS categoria '
-        'FROM productos p LEFT JOIN categorias c ON p.id_categoria = c.id_categoria '
+        'SELECT p.id_producto, p.nombre, p.precio_venta AS precio, IFNULL(i.stock_actual, 0) AS stock, c.nombre AS categoria '
+        'FROM productos p '
+        'LEFT JOIN categorias c ON p.id_categoria = c.id_categoria '
+        'LEFT JOIN inventario i ON i.id_producto = p.id_producto '
+        'WHERE p.activo = 1 '
         'ORDER BY p.nombre ASC'
     ).fetchall()
     conn.close()
@@ -282,7 +136,7 @@ def inventory():
 def clients():
     conn = get_db()
     clients = conn.execute(
-        'SELECT id_cliente, nombre, correo, telefono, direccion FROM clientes ORDER BY nombre ASC LIMIT 20'
+        'SELECT id_cliente, nombre, correo, telefono, direccion FROM clientes WHERE activo = 1 ORDER BY nombre ASC LIMIT 20'
     ).fetchall()
     conn.close()
     return jsonify({'clients': [dict(row) for row in clients]})
@@ -333,13 +187,207 @@ def invoice_detail(invoice_id):
 def sales_data():
     conn = get_db()
     products = conn.execute(
-        'SELECT id_producto, nombre, precio_venta AS precio, stock FROM productos ORDER BY nombre ASC LIMIT 20'
+        'SELECT p.id_producto, p.nombre, p.precio_venta AS precio, IFNULL(i.stock_actual, 0) AS stock '
+        'FROM productos p '
+        'LEFT JOIN inventario i ON i.id_producto = p.id_producto '
+        'WHERE p.activo = 1 ORDER BY p.nombre ASC LIMIT 20'
     ).fetchall()
     clients = conn.execute(
-        'SELECT id_cliente, nombre FROM clientes ORDER BY nombre ASC LIMIT 20'
+        'SELECT id_cliente, nombre FROM clientes WHERE activo = 1 ORDER BY nombre ASC LIMIT 20'
     ).fetchall()
     conn.close()
     return jsonify({'products': [dict(row) for row in products], 'clients': [dict(row) for row in clients]})
+
+@app.route('/api/product/<int:product_id>', methods=['GET'])
+def get_product(product_id):
+    ph = placeholder()
+    conn = get_db()
+    product = conn.execute(
+        f'SELECT p.id_producto, p.nombre, p.descripcion, p.precio_venta AS precio, p.costo, c.id_categoria, c.nombre AS categoria, IFNULL(i.stock_actual, 0) AS stock '
+        f'FROM productos p '
+        f'LEFT JOIN categorias c ON p.id_categoria = c.id_categoria '
+        f'LEFT JOIN inventario i ON i.id_producto = p.id_producto '
+        f'WHERE p.id_producto = {ph} AND p.activo = 1',
+        (product_id,)
+    ).fetchone()
+    conn.close()
+    if not product:
+        return jsonify({'message': 'Producto no encontrado.'}), 404
+    return jsonify({'product': dict(product)})
+
+@app.route('/api/product', methods=['POST'])
+def create_product():
+    data = request.get_json() or {}
+    nombre = data.get('nombre')
+    categoria = data.get('categoria')
+    precio = data.get('precio')
+    stock = data.get('stock', 0)
+    descripcion = data.get('descripcion', '')
+
+    if not nombre or not categoria or precio is None:
+        return jsonify({'message': 'Nombre, categoría y precio son requeridos.'}), 400
+
+    conn = get_db()
+    ph = placeholder()
+    category_row = conn.execute(
+        f'SELECT id_categoria FROM categorias WHERE nombre = {ph} LIMIT 1',
+        (categoria,)
+    ).fetchone()
+    if category_row:
+        category_id = category_row['id_categoria']
+    else:
+        category_cursor = conn.execute(
+            f'INSERT INTO categorias (nombre) VALUES ({ph})',
+            (categoria,)
+        )
+        category_id = category_cursor.lastrowid
+        if not category_id:
+            category_id = conn.execute('SELECT last_insert_rowid()').fetchone()[0]
+
+    product_cursor = conn.execute(
+        f'INSERT INTO productos (nombre, descripcion, costo, precio_venta, id_categoria) VALUES ({ph}, {ph}, {ph}, {ph}, {ph})',
+        (nombre, descripcion, precio, precio, category_id)
+    )
+    product_id = product_cursor.lastrowid
+    if not product_id:
+        product_id = conn.execute('SELECT last_insert_rowid()').fetchone()[0]
+
+    conn.execute(
+        f'INSERT INTO inventario (id_producto, stock_actual) VALUES ({ph}, {ph})',
+        (product_id, stock)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Producto creado correctamente.', 'id_producto': product_id}), 201
+
+@app.route('/api/product/<int:product_id>', methods=['PUT'])
+def update_product(product_id):
+    data = request.get_json() or {}
+    nombre = data.get('nombre')
+    categoria = data.get('categoria')
+    precio = data.get('precio')
+    stock = data.get('stock')
+    descripcion = data.get('descripcion', '')
+
+    if not nombre or not categoria or precio is None or stock is None:
+        return jsonify({'message': 'Nombre, categoría, precio y stock son requeridos.'}), 400
+
+    conn = get_db()
+    ph = placeholder()
+    category_row = conn.execute(
+        f'SELECT id_categoria FROM categorias WHERE nombre = {ph} LIMIT 1',
+        (categoria,)
+    ).fetchone()
+    if category_row:
+        category_id = category_row['id_categoria']
+    else:
+        category_cursor = conn.execute(
+            f'INSERT INTO categorias (nombre) VALUES ({ph})',
+            (categoria,)
+        )
+        category_id = category_cursor.lastrowid
+        if not category_id:
+            category_id = conn.execute('SELECT last_insert_rowid()').fetchone()[0]
+
+    conn.execute(
+        f'UPDATE productos SET nombre = {ph}, descripcion = {ph}, precio_venta = {ph}, id_categoria = {ph} WHERE id_producto = {ph}',
+        (nombre, descripcion, precio, category_id, product_id)
+    )
+    existing_inv = conn.execute(
+        f'SELECT id_inventario FROM inventario WHERE id_producto = {ph}',
+        (product_id,)
+    ).fetchone()
+    if existing_inv:
+        conn.execute(
+            f'UPDATE inventario SET stock_actual = {ph} WHERE id_producto = {ph}',
+            (stock, product_id)
+        )
+    else:
+        conn.execute(
+            f'INSERT INTO inventario (id_producto, stock_actual) VALUES ({ph}, {ph})',
+            (product_id, stock)
+        )
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Producto actualizado correctamente.'})
+
+@app.route('/api/product/<int:product_id>', methods=['DELETE'])
+def delete_product(product_id):
+    ph = placeholder()
+    conn = get_db()
+    conn.execute(f'DELETE FROM imagenes_productos WHERE id_producto = {ph}', (product_id,))
+    conn.execute(f'DELETE FROM inventario WHERE id_producto = {ph}', (product_id,))
+    conn.execute(f'DELETE FROM productos WHERE id_producto = {ph}', (product_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Producto eliminado correctamente.'})
+
+@app.route('/api/client/<int:client_id>', methods=['GET'])
+def get_client(client_id):
+    ph = placeholder()
+    conn = get_db()
+    client = conn.execute(
+        f'SELECT id_cliente, nombre, correo, telefono, direccion FROM clientes WHERE id_cliente = {ph} AND activo = 1',
+        (client_id,)
+    ).fetchone()
+    conn.close()
+    if not client:
+        return jsonify({'message': 'Cliente no encontrado.'}), 404
+    return jsonify({'client': dict(client)})
+
+@app.route('/api/client', methods=['POST'])
+def create_client():
+    data = request.get_json() or {}
+    nombre = data.get('nombre')
+    correo = data.get('correo')
+    telefono = data.get('telefono', '')
+    direccion = data.get('direccion', '')
+
+    if not nombre or not correo:
+        return jsonify({'message': 'Nombre y correo son requeridos.'}), 400
+
+    conn = get_db()
+    ph = placeholder()
+    conn.execute(
+        f'INSERT INTO clientes (nombre, correo, telefono, direccion, activo) VALUES ({ph}, {ph}, {ph}, {ph}, 1)',
+        (nombre, correo, telefono, direccion)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Cliente creado correctamente.'}), 201
+
+@app.route('/api/client/<int:client_id>', methods=['PUT'])
+def update_client(client_id):
+    data = request.get_json() or {}
+    nombre = data.get('nombre')
+    correo = data.get('correo')
+    telefono = data.get('telefono', '')
+    direccion = data.get('direccion', '')
+
+    if not nombre or not correo:
+        return jsonify({'message': 'Nombre y correo son requeridos.'}), 400
+
+    ph = placeholder()
+    conn = get_db()
+    conn.execute(
+        f'UPDATE clientes SET nombre = {ph}, correo = {ph}, telefono = {ph}, direccion = {ph} WHERE id_cliente = {ph} AND activo = 1',
+        (nombre, correo, telefono, direccion, client_id)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Cliente actualizado correctamente.'})
+
+@app.route('/api/client/<int:client_id>', methods=['DELETE'])
+def delete_client(client_id):
+    ph = placeholder()
+    conn = get_db()
+    conn.execute(
+        f'UPDATE clientes SET activo = 0 WHERE id_cliente = {ph}',
+        (client_id,)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Cliente eliminado correctamente.'})
 
 @app.route('/api/recover', methods=['POST'])
 def recover_password():

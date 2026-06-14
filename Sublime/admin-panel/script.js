@@ -108,21 +108,27 @@ async function loadDashboard() {
 
         dashboardData = response;
 
-        dashboardData.categories = stats.categories || [];
-        dashboardData.monthly = stats.monthly || [];
+        dashboardData.categories = response.categories || [];
+        dashboardData.monthly = response.monthly || [];
         dashboardData.totalIncome = stats.totalIncome || 0;
 
-        document.getElementById('salesCount').textContent =
-            stats.totalSales || 0;
+        const salesCountEl = document.getElementById('salesCount');
+        const incomeValueEl = document.getElementById('incomeValue');
+        const stockValueEl = document.getElementById('stockValue');
+        const clientCountEl = document.getElementById('clientCount');
 
-        document.getElementById('incomeValue').textContent =
-            formatCurrency(stats.totalIncome);
-
-        document.getElementById('stockValue').textContent =
-            stats.totalStock || 0;
-
-        document.getElementById('clientCount').textContent =
-            stats.totalClients || 0;
+        if (salesCountEl) {
+            salesCountEl.textContent = stats.totalSales || 0;
+        }
+        if (incomeValueEl) {
+            incomeValueEl.textContent = formatCurrency(stats.totalIncome);
+        }
+        if (stockValueEl) {
+            stockValueEl.textContent = stats.totalStock || 0;
+        }
+        if (clientCountEl) {
+            clientCountEl.textContent = stats.totalClients || 0;
+        }
 
         if (dashboardData.categories?.length) {
 
@@ -518,7 +524,7 @@ async function loadClients() {
 
                     <h3>${client.nombre}</h3>
 
-                    <p>${client.email}</p>
+                    <p>${client.correo}</p>
 
                     <p>${client.telefono}</p>
 
@@ -1292,106 +1298,44 @@ window.addEventListener('click', e => {
 
 if (productForm) {
 
-    productForm.addEventListener('submit', e => {
+    productForm.addEventListener('submit', async e => {
 
         e.preventDefault();
 
-        const nombre =
-            document.getElementById('productName').value;
+        const nombre = document.getElementById('productName').value;
+        const categoria = document.getElementById('productCategory').value;
+        const precio = Number(document.getElementById('productPrice').value);
+        const stock = Number(document.getElementById('productStock').value);
+        const descripcion = document.getElementById('productDescription').value;
 
-        const categoria =
-            document.getElementById('productCategory').value;
-
-        const precio =
-            document.getElementById('productPrice').value;
-
-        const stock =
-            document.getElementById('productStock').value;
-
-        const descripcion =
-            document.getElementById('productDescription').value;
-
-        const imagenInput =
-            document.getElementById('productImage');
-
-        const imagen =
-            imagenInput.files[0];
-
-        const tableBody =
-            document.getElementById('inventoryTableBody');
-
-        if (!tableBody) return;
-
-        let imageHTML = 'Sin imagen';
-
-        if (imagen) {
-
-            const imageURL =
-                URL.createObjectURL(imagen);
-
-            imageHTML = `
-                <img src="${imageURL}"
-                     alt="${nombre}"
-                     class="inventory-image">
-            `;
-
+        if (!nombre || !categoria || isNaN(precio) || isNaN(stock)) {
+            showToast('Completa nombre, categoría, precio y stock.', 'error');
+            return;
         }
 
-        const newRow = document.createElement('tr');
+        try {
+            await apiRequest('product', {
+                method: 'POST',
+                body: {
+                    nombre,
+                    categoria,
+                    precio,
+                    stock,
+                    descripcion
+                }
+            });
 
-        newRow.innerHTML = `
-
-            <td>
-
-                <div class="inventory-product">
-
-                    ${imageHTML}
-
-                    <div>
-
-                        <strong>${nombre}</strong>
-
-                        <p class="inventory-description">
-                            ${descripcion || 'Sin descripción'}
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </td>
-
-            <td>${categoria}</td>
-
-            <td>${formatCurrency(precio)}</td>
-
-            <td>${stock}</td>
-
-            <td>
-
-                <button class="table-btn edit-btn">
-                    Editar
-                </button>
-
-                <button class="table-btn delete-btn">
-                    Eliminar
-                </button>
-
-            </td>
-
-        `;
-
-        tableBody.prepend(newRow);
-
-        /* LIMPIAR FORMULARIO */
-
-        productForm.reset();
-
-        /* CERRAR MODAL */
-
-        cerrarProductModal();
-
-        showToast('Producto agregado al inventario', 'success');
+            productForm.reset();
+            cerrarProductModal();
+            await Promise.all([
+                loadInventory(),
+                loadSalesData(),
+                loadDashboard()
+            ]);
+            showToast('Producto creado y sincronizado con la base de datos.', 'success');
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
 
     });
 
@@ -1493,7 +1437,7 @@ window.addEventListener('click', e => {
 
 if (clientForm) {
 
-    clientForm.addEventListener('submit', e => {
+    clientForm.addEventListener('submit', async e => {
 
         e.preventDefault();
 
@@ -1502,67 +1446,34 @@ if (clientForm) {
         const phone = document.getElementById('clientPhone').value;
         const address = document.getElementById('clientAddress').value;
 
-        const container =
-            document.getElementById('clientsList');
+        if (!name || !email) {
+            showToast('Nombre y correo son requeridos.', 'error');
+            return;
+        }
 
-        const card = document.createElement('div');
+        try {
+            await apiRequest('client', {
+                method: 'POST',
+                body: {
+                    nombre: name,
+                    correo: email,
+                    telefono: phone,
+                    direccion: address
+                }
+            });
 
-        card.classList.add('client-card-modern');
+            clientForm.reset();
+            cerrarClientModal();
+            await Promise.all([
+                loadClients(),
+                loadSalesData(),
+                loadDashboard()
+            ]);
+            showToast('Cliente creado y sincronizado con la base de datos.', 'success');
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
 
-        const initial = name.charAt(0).toUpperCase();
-
-        card.innerHTML = `
-
-        <div class="client-actions">
-
-            <button
-                class="edit-client-btn"
-                onclick="openEditClient(0)">
-
-                ✏️
-
-            </button>
-
-            <button
-                class="delete-client-btn"
-                onclick="this.closest('.client-card-modern').remove()">
-
-                🗑️
-
-            </button>
-
-        </div>
-
-        <div class="client-avatar-modern">
-
-            ${initial}
-
-        </div>
-
-        <h3>${name}</h3>
-
-        <p>${email}</p>
-
-        <p>${phone}</p>
-
-        <p>${address}</p>
-
-        <hr>
-
-        <small>
-            Registrado:
-            ${new Date().toLocaleDateString('es-VE')}
-        </small>
-
-        `;
-
-        container.prepend(card);
-
-        clientForm.reset();
-
-        cerrarClientModal();
-
-        showToast('Cliente agregado correctamente', 'success');
     });
 
 }
@@ -1649,50 +1560,63 @@ function getCurrentIVA(){
     ) || 16;
 }
 
-async function openEditProduct(id){
+async function openEditProduct(id) {
 
-    try{
+    try {
 
         const response = await apiRequest(`product/${id}`);
-
         const product = response.product;
 
         document.getElementById('editId').value = product.id_producto;
         document.getElementById('editNombre').value = product.nombre;
-        document.getElementById('editCategoria').value = product.categoria;
+        document.getElementById('editCategoria').value = product.categoria || '';
         document.getElementById('editPrecio').value = product.precio;
         document.getElementById('editStock').value = product.stock;
         document.getElementById('editImagen').value = product.imagen || '';
         document.getElementById('editDescripcion').value = product.descripcion || '';
 
-        document
-            .getElementById('editProductModal')
-            .classList.add('active');
+        document.getElementById('editProductModal').classList.add('active');
 
-    }catch(error){
+    } catch (error) {
 
-        console.error(error);
+        showToast(error.message, 'error');
 
     }
 }
 
+window.openEditModal = openEditProduct;
+
+window.deleteProduct = async function(id) {
+    const confirmar = confirm('¿Desea eliminar este producto?');
+    if (!confirmar) return;
+
+    try {
+        await apiRequest(`product/${id}`, {
+            method: 'DELETE'
+        });
+        await loadInventory();
+        showToast('Producto eliminado correctamente.', 'success');
+    } catch (error) {
+        showToast(error.message, 'error');
+    }
+};
+
 document
     .getElementById('saveEditBtn')
-    .addEventListener('click', async ()=>{
+    .addEventListener('click', async () => {
 
     const id = document.getElementById('editId').value;
 
-    try{
+    try {
 
-        await apiRequest(`product/${id}`,{
-            method:'PUT',
-            body:{
-                nombre:document.getElementById('editNombre').value,
-                categoria:document.getElementById('editCategoria').value,
-                precio:document.getElementById('editPrecio').value,
-                stock:document.getElementById('editStock').value,
-                imagen:document.getElementById('editImagen').value,
-                descripcion:document.getElementById('editDescripcion').value
+        await apiRequest(`product/${id}`, {
+            method: 'PUT',
+            body: {
+                nombre: document.getElementById('editNombre').value,
+                categoria: document.getElementById('editCategoria').value,
+                precio: Number(document.getElementById('editPrecio').value),
+                stock: Number(document.getElementById('editStock').value),
+                descripcion: document.getElementById('editDescripcion').value
             }
         });
 
@@ -1700,27 +1624,10 @@ document
             .getElementById('editProductModal')
             .classList.remove('active');
 
-        loadInventory();
-
-        const productsCache =
-            JSON.parse(
-                localStorage.getItem('productsCache')
-            ) || [];
-
-        productsCache.push({
-            nombre: productName,
-            precio: productPrice,
-            stock: productStock
-        });
-
-        localStorage.setItem(
-            'productsCache',
-            JSON.stringify(productsCache)
-        );
-
+        await loadInventory();
         showToast('Producto actualizado correctamente', 'success');
 
-    }catch(error){
+    } catch (error) {
 
         showToast(error.message, 'error');
 
@@ -1837,45 +1744,28 @@ document
 
 });
 
-window.openEditClient = async function(id){
+window.openEditClient = async function(id) {
 
-    try{
+    try {
 
-        const response =
-            await apiRequest(`client/${id}`);
+        const response = await apiRequest(`client/${id}`);
+        const client = response.client;
 
-        const client =
-            response.client;
+        document.getElementById('editClientId').value = client.id_cliente;
+        document.getElementById('editClientName').value = client.nombre;
+        document.getElementById('editClientEmail').value = client.correo;
+        document.getElementById('editClientPhone').value = client.telefono || '';
+        document.getElementById('editClientAddress').value = client.direccion || '';
 
-        document.getElementById(
-            'editClientId'
-        ).value = client.id_cliente;
+        document.getElementById('editClientModal').classList.add('active');
 
-        document.getElementById(
-            'editClientName'
-        ).value = client.nombre;
+    } catch (error) {
 
-        document.getElementById(
-            'editClientEmail'
-        ).value = client.correo;
-
-        document.getElementById(
-            'editClientPhone'
-        ).value = client.telefono;
-
-        document.getElementById(
-            'editClientAddress'
-        ).value = client.direccion;
-
-        document
-            .getElementById('editClientModal')
-            .classList.add('active');
-
-    }catch(error){
-
-        console.error(error);}
+        showToast(error.message, 'error');
 
     }
+
+};
 
 document
 .getElementById('saveClientBtn')
@@ -1923,40 +1813,22 @@ document
 
 });
 
-window.deleteClient = async function(id){
+window.deleteClient = async function(id) {
 
-    const confirmar =
-        confirm(
-            '¿Desea eliminar este cliente?'
-        );
+    const confirmar = confirm('¿Desea eliminar este cliente?');
+    if (!confirmar) return;
 
-    if(!confirmar) return;
+    try {
+        await apiRequest(`client/${id}`, {
+            method: 'DELETE'
+        });
+        await loadClients();
+        showToast('Cliente eliminado correctamente.', 'success');
+    } catch (error) {
+        showToast(error.message, 'error');
+    }
 
-    await apiRequest(`client/${id}`,{
-
-        method:'DELETE'
-
-    });
-
-    loadClients();
-
-    const clientsCache =
-        JSON.parse(
-            localStorage.getItem('clientsCache')
-        ) || [];
-
-    clientsCache.push({
-        nombre: clientName,
-        correo: clientEmail,
-        telefono: clientPhone
-    });
-
-    localStorage.setItem(
-        'clientsCache',
-        JSON.stringify(clientsCache)
-    );
-
-}
+};
 
 document
 .getElementById('cancelClientBtn')

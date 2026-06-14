@@ -751,8 +751,8 @@ input:checked + .slider:before{
 .report-modal{
     position:fixed;
     inset:0;
-    background:rgba(0,0,0,0.35);
-    backdrop-filter:blur(3px);
+    background:rgba(0,0,0,0.40);
+    backdrop-filter:blur(4px);
     display:flex;
     justify-content:center;
     align-items:center;
@@ -770,13 +770,14 @@ input:checked + .slider:before{
 
 .report-modal-content{
     width:100%;
-    max-width:420px;
-    background:var(--surface);
-    border-radius:20px;
-    padding:24px;
+    max-width:520px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(244,255,248,0.95));
+    border-radius:28px;
+    padding:28px;
     transform:translateY(20px);
     transition:0.25s ease;
-    box-shadow:0 10px 40px rgba(0,0,0,0.15);
+    box-shadow:0 16px 45px rgba(0,0,0,0.18);
+    border:1px solid rgba(0,208,132,0.18);
 }
 
 .report-modal.active .report-modal-content{
@@ -790,31 +791,35 @@ input:checked + .slider:before{
     justify-content:space-between;
     align-items:flex-start;
     gap:15px;
-    margin-bottom:25px;
+    margin-bottom:24px;
 }
 
 .report-header h2{
-    font-size:28px;
-    font-weight:700;
-    color:var(--text);
-    margin-bottom:8px;
+    font-size:30px;
+    font-weight:800;
+    color:#1f2937;
+    margin-bottom:6px;
+    background: linear-gradient(90deg, #00b350, #00ff80);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .report-header p{
     font-size:15px;
-    line-height:1.5;
-    color:var(--muted);
+    line-height:1.7;
+    color:#4b5563;
+    max-width:320px;
 }
 
 .close-modal{
-    font-size:24px;
+    font-size:28px;
     cursor:pointer;
-    color:var(--muted);
+    color:#6b7280;
     transition:0.2s;
 }
 
 .close-modal:hover{
-    color:var(--text);
+    color:#111827;
 }
 
 /* GROUPS */
@@ -826,49 +831,57 @@ input:checked + .slider:before{
 .report-group label{
     display:block;
     margin-bottom:10px;
-    font-size:15px;
-    font-weight:600;
-    color:var(--text);
+    font-size:14px;
+    font-weight:700;
+    color:#111827;
 }
 
 .report-group select{
     width:100%;
-    height:52px;
+    height:54px;
     border:none;
-    background:var(--surface-2);
-    border-radius:12px;
-    padding:0 16px;
+    background:#f8fafc;
+    border-radius:16px;
+    padding:0 18px;
     font-size:15px;
     outline:none;
-    color:var(--text);
+    color:#111827;
+    box-shadow: inset 0 1px 3px rgba(15,23,42,0.08);
 }
 
 /* INFO */
 
 .report-info{
-    background:var(--info-bg);
-    border:1px solid var(--info-border);
-    border-radius:14px;
-    padding:16px;
+    background:#ffffff;
+    border:1px solid rgba(0,208,132,0.15);
+    border-radius:20px;
+    padding:22px;
     display:flex;
-    gap:14px;
-    margin-top:8px;
-    margin-bottom:25px;
+    gap:18px;
+    margin-top:10px;
+    margin-bottom:28px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.06);
 }
 
 .report-icon{
-    font-size:20px;
+    font-size:24px;
+    padding:14px;
+    border-radius:14px;
+    background:rgba(0,208,132,0.10);
+    color:#0f766e;
+    align-self:flex-start;
 }
 
 .report-info h4{
-    margin-bottom:6px;
-    color:var(--info-text);
+    margin-bottom:8px;
+    color:#0f766e;
+    font-size:17px;
 }
 
 .report-info p{
-    color:var(--info-text);
+    color:#374151;
     font-size:14px;
-    line-height:1.5;
+    line-height:1.7;
 }
 
 /* ACTIONS */
@@ -880,23 +893,33 @@ input:checked + .slider:before{
 
 .report-actions button{
     flex:1;
-    height:48px;
+    height:52px;
     border:none;
-    border-radius:12px;
+    border-radius:16px;
     cursor:pointer;
     font-size:15px;
-    font-weight:600;
+    font-weight:700;
+    transition:0.2s ease;
 }
 
 .btn-cancel{
-    background:var(--surface-2);
-    color:var(--text);
-    border:1px solid var(--border) !important;
+    background:#f8fafc;
+    color:#111827;
+    border:1px solid rgba(156,163,175,0.35) !important;
+}
+
+.btn-cancel:hover{
+    background:#eef2ff;
 }
 
 .btn-download{
-    background:var(--primary);
-    color:white;
+    background:linear-gradient(135deg, #00b350, #00ff80);
+    color:#061b11;
+    box-shadow:0 12px 24px rgba(0,208,132,0.25);
+}
+
+.btn-download:hover{
+    transform:translateY(-1px);
 }
 
 /* =========================

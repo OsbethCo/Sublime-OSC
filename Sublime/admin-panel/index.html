@@ -83,30 +83,6 @@
                 <!-- IZQUIERDA -->
                 <div class="left">
 
-
-                    <!-- USUARIOS + INVENTARIO -->
-                    <div class="row-2">
-
-                        <!-- USUARIOS -->
-                        <div class="box users-box">
-
-                            <h3>N° de usuarios</h3>
-
-                            <div class="users-content">
-
-                                <div class="icon-top">
-                                    <img src="./img/users.png" alt="Usuarios" class="icon-user" />
-                                </div>
-
-                                <div>
-                                    <h2>583K</h2>
-                                    <p>Total Customers</p>
-                                </div>
-
-                            </div>
-
-                        </div>
-
                         <!-- DONUT -->
                         <div class="box inventory-box">
 
@@ -117,8 +93,6 @@
                             </div>
 
                         </div>
-
-                    </div>
 
                     <!-- GRAFICA -->
                     <div class="box chart-line-box">
@@ -140,44 +114,8 @@
 
                         <h3>Top 10 Productos por Ventas</h3>
 
-                        <div class="bar">
-                            <span>Franela Blanca</span>
-                            <div class="progress">
-                                <div style="width:90%"></div>
-                            </div>
-                            <b>$78</b>
-                        </div>
-
-                        <div class="bar">
-                            <span>Franela Negra</span>
-                            <div class="progress">
-                                <div style="width:70%"></div>
-                            </div>
-                            <b>$52</b>
-                        </div>
-
-                        <div class="bar">
-                            <span>Morrales</span>
-                            <div class="progress">
-                                <div style="width:50%"></div>
-                            </div>
-                            <b>$36</b>
-                        </div>
-
-                        <div class="bar">
-                            <span>Gorra</span>
-                            <div class="progress">
-                                <div style="width:40%"></div>
-                            </div>
-                            <b>$20</b>
-                        </div>
-
-                        <div class="bar">
-                            <span>Taza</span>
-                            <div class="progress">
-                                <div style="width:30%"></div>
-                            </div>
-                            <b>$13</b>
+                        <div class="loading-top-products">
+                            <p>Cargando los productos más vendidos...</p>
                         </div>
 
                     </div>
@@ -223,18 +161,9 @@
                     </thead>
 
                     <tbody id="inventoryTableBody">
-
                         <tr>
-                            <td>Franela Clásica Negra</td>
-                            <td>franelas</td>
-                            <td>$25.99</td>
-                            <td>50</td>
-                            <td>
-                                <button class="btn edit" onclick="openEditProduct(1)">Editar</button>
-                                <button class="btn delete-btn">Eliminar</button>
-                            </td>
+                            <td colspan="5">Cargando inventario...</td>
                         </tr>
-
                     </tbody>
 
                 </table>
@@ -364,20 +293,9 @@
                     </thead>
 
                     <tbody id="invoicesTableBody">
-
                         <tr>
-                            <td>INV-001</td>
-                            <td>Juan Pérez</td>
-                            <td>31/03/2026</td>
-                            <td>2 producto(s)</td>
-                            <td>$64.97</td>
-                            <td>
-                                <button class="btn secondary" onclick="openInvoiceModal(1)">
-                                    Ver Detalle
-                                </button>
-                            </td>
+                            <td colspan="6">Cargando facturas...</td>
                         </tr>
-
                     </tbody>
 
                 </table>
