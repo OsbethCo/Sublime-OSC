@@ -214,8 +214,12 @@ def load_cart_from_db():
     carrito_id = get_or_create_cart(conn, cliente_id)
     
     items = conn.execute(
+<<<<<<< HEAD
         'SELECT dc.id_detalle, dc.id_producto, dc.cantidad, dc.precio_unitario, p.nombre AS name, p.descripcion, '
         '(SELECT ip.ruta_imagen FROM imagenes_productos ip WHERE ip.id_producto = p.id_producto ORDER BY ip.id_imagen LIMIT 1) AS image_url '
+=======
+        'SELECT dc.id_detalle, dc.id_producto, dc.cantidad, dc.precio_unitario, p.nombre AS name, p.descripcion '
+>>>>>>> 52ca968bff56542ba0b84efc09c713e45f438d77
         'FROM detalle_carrito dc '
         'LEFT JOIN productos p ON dc.id_producto = p.id_producto '
         'WHERE dc.id_carrito = ? '
@@ -230,8 +234,12 @@ def load_cart_from_db():
             'name': item['name'] or 'Producto personalizado',
             'price': float(item['precio_unitario']),
             'quantity': item['cantidad'],
+<<<<<<< HEAD
             'details': item['descripcion'] or '',
             'image_url': item['image_url'] or 'placeholder.png'
+=======
+            'details': item['descripcion'] or ''
+>>>>>>> 52ca968bff56542ba0b84efc09c713e45f438d77
         }
         for item in items
     ]
@@ -1133,6 +1141,7 @@ def carrito():
     else:
         cart = session.get('cart', [])
     
+<<<<<<< HEAD
     # Enrich session cart items with image_url
     for item in cart:
         if 'image_url' not in item or not item.get('image_url'):
@@ -1147,6 +1156,8 @@ def carrito():
             else:
                 item['image_url'] = 'placeholder.png'
     
+=======
+>>>>>>> 52ca968bff56542ba0b84efc09c713e45f438d77
     total = sum(item['price'] * item.get('quantity', 1) for item in cart)
     return render_template('carrito.html', cart=cart, total=total, cart_count=len(cart))
 
@@ -1169,6 +1180,7 @@ def eliminar_carrito(index):
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
     if 'user_id' in session:
+<<<<<<< HEAD
         full_cart = load_cart_from_db()
     else:
         full_cart = session.get('cart', [])
@@ -1200,6 +1212,18 @@ def checkout():
     total = sum(item['price'] * item.get('quantity', 1) for item in cart)
 
     if request.method == 'POST' and request.form.get('name'):
+=======
+        cart = load_cart_from_db()
+    else:
+        cart = session.get('cart', [])
+    
+    if not cart:
+        flash('Tu carrito está vacío.', 'error')
+        return redirect(url_for('catalogo'))
+
+    total = sum(item['price'] * item.get('quantity', 1) for item in cart)
+    if request.method == 'POST':
+>>>>>>> 52ca968bff56542ba0b84efc09c713e45f438d77
         name = request.form.get('name')
         address = request.form.get('address')
         payment_method = request.form.get('payment_method')
@@ -1227,6 +1251,7 @@ def checkout():
                 (pedido_id, product_id, cantidad, item['price'])
             )
 
+<<<<<<< HEAD
     conn.execute(
         'INSERT INTO envios (id_pedido, direccion_envio, empresa_envio, numero_guia, estado_envio, fecha_envio) VALUES (?, ?, ?, ?, ?, datetime("now"))',
         (pedido_id, address, payment_method or 'Pendiente', reference or '', 'Pendiente',)
@@ -1246,6 +1271,25 @@ def checkout():
 
     cart_count = len(cart)
     return render_template('checkout.html', total=total, cart_count=cart_count, item_count=len(cart))
+=======
+        conn.execute(
+            'INSERT INTO envios (id_pedido, direccion_envio, empresa_envio, numero_guia, estado_envio, fecha_envio) VALUES (?, ?, ?, ?, ?, datetime("now"))',
+            (pedido_id, address, payment_method or 'Pendiente', reference or '', 'Pendiente',)
+        )
+        conn.commit()
+        conn.close()
+
+        # Limpiar carrito
+        if 'user_id' in session:
+            save_cart_to_db([])
+        else:
+            session.pop('cart', None)
+        
+        return redirect(url_for('factura', order_id=pedido_id))
+
+    cart_count = len(cart)
+    return render_template('checkout.html', total=total, cart_count=cart_count)
+>>>>>>> 52ca968bff56542ba0b84efc09c713e45f438d77
 
 @app.route('/factura/<int:order_id>')
 def factura(order_id):
