@@ -141,3 +141,15 @@ Si encuentras problemas:
 4. Verifica que no haya conflictos de puertos
 
 Para más ayuda, revisa los archivos de configuración o contacta al desarrollador.
+
+
+Panel administrativo:
+
+usuario: admin@sublime.com
+contraseña: admin123
+rol: Administrador Panel
+Perfil administrador web:
+
+usuario: admin_web@sublime.com
+contraseña: adminweb123
+rol: Administrador Web
