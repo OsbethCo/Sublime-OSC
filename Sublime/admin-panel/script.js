@@ -1132,45 +1132,270 @@ function generarPDF(tipo) {
    EXCEL
 ========================= */
 
-function generarExcel(tipo) {
+async function generarExcel(tipo) {
 
-    const datos = [
-        ['Producto', 'Cantidad', 'Total']
-    ];
+    try {
 
-    dashboardData.topProducts.forEach(producto => {
+        const response =
+            await apiRequest(
+                `report-data?tipo=${tipo}`
+            );
 
-        datos.push([
-            producto.producto,
-            producto.cantidad,
-            producto.total
-        ]);
+        const ventas =
+            response.ventas || [];
 
-    });
+        if (!ventas.length) {
 
-    datos.push([]);
-    datos.push([
-        'Ganancias Totales',
-        '',
-        dashboardData.totalIncome
-    ]);
+            showToast(
+                'No existen datos para exportar',
+                'warning'
+            );
 
-    const hoja =
-        XLSX.utils.aoa_to_sheet(datos);
+            return;
+        }
 
-    const libro =
-        XLSX.utils.book_new();
+        let subtotalGeneral = 0;
+        let ivaGeneral = 0;
+        let totalUsdGeneral = 0;
+        let totalBsGeneral = 0;
+        let costoTotal = 0;
+        let gananciaNeta = 0;
+        let margenGanancia = 0;
 
-    XLSX.utils.book_append_sheet(
-        libro,
-        hoja,
-        'Reporte'
-    );
+        const detalle = [
 
-    XLSX.writeFile(
-        libro,
-        `reporte-${tipo}.xlsx`
-    );
+            [
+                'Factura',
+                'Fecha',
+                'Cliente',
+                'Producto',
+                'Cantidad',
+                'Precio Unitario',
+                'Subtotal',
+                'IVA',
+                'Total USD',
+                'Total Bs',
+                'Tasa'
+            ]
+
+        ];
+
+        ventas.forEach(v => {
+
+            subtotalGeneral +=
+                Number(v.subtotal || 0);
+
+            ivaGeneral +=
+                Number(v.impuesto || 0);
+
+            totalUsdGeneral +=
+                Number(v.total_usd || 0);
+
+            totalBsGeneral +=
+                Number(v.total_bs || 0);
+
+            costoTotal +=
+                Number(v.costo_total_producto || 0);
+
+            detalle.push([
+
+                v.numero_factura,
+
+                v.fecha,
+
+                v.cliente,
+
+                v.producto,
+
+                v.cantidad,
+
+                v.precio_unitario,
+
+                v.subtotal,
+
+                v.impuesto,
+
+                v.total_usd,
+
+                v.total_bs,
+
+                v.tasa
+
+            ]);
+
+        });
+
+        gananciaNeta = totalUsdGeneral - costoTotal;
+
+        margenGanancia = 
+            totalUsdGeneral > 0
+                ? (
+                    gananciaNeta /
+                    totalUsdGeneral
+                ) * 100
+                : 0;
+
+        
+        
+        gananciaNeta = Number(gananciaNeta.toFixed(2));
+        margenGanancia = Number(margenGanancia.toFixed(2));
+
+        const resumen = [
+
+            ['REPORTE', tipo.toUpperCase()],
+            [],
+
+            ['Facturas', ventas.length],
+
+            ['Subtotal USD',
+                subtotalGeneral
+            ],
+
+            ['IVA USD',
+                ivaGeneral
+            ],
+
+            ['Total USD',
+                totalUsdGeneral
+            ],
+
+            ['Total Bs',
+                totalBsGeneral
+            ]
+
+        ];
+
+        const estadisticas = [
+
+            ['Indicador', 'Valor'],
+
+            [
+                'Promedio USD',
+                totalUsdGeneral /
+                ventas.length
+            ],
+
+            [
+                'Promedio Bs',
+                totalBsGeneral /
+                ventas.length
+            ],
+
+            [
+                'Mayor Venta USD',
+
+                Math.max(
+                    ...ventas.map(
+                        x =>
+                        Number(
+                            x.total_usd
+                        )
+                    )
+                )
+            ],
+
+            [
+                'Menor Venta USD',
+
+                Math.min(
+                    ...ventas.map(
+                        x =>
+                        Number(
+                            x.total_usd
+                        )
+                    )
+                )
+            ]
+
+        ];
+
+        const ganancias = [
+
+            ['Indicador', 'Valor'],
+
+            [
+                'Costo Total USD',
+                costoTotal
+            ],
+
+            [
+                'Ingreso Total USD',
+                totalUsdGeneral
+            ],
+
+            [
+                'Ganancia Neta USD',
+                gananciaNeta
+            ],
+
+            [
+                'Margen %',
+                margenGanancia.toFixed(2)
+            ]
+
+        ];
+
+        const wb =
+            XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(
+            wb,
+            XLSX.utils.aoa_to_sheet(
+                resumen
+            ),
+            'Resumen'
+        );
+
+        XLSX.utils.book_append_sheet(
+            wb,
+            XLSX.utils.aoa_to_sheet(
+                detalle
+            ),
+            'Detalle'
+        );
+
+        XLSX.utils.book_append_sheet(
+            wb,
+            XLSX.utils.aoa_to_sheet(
+                estadisticas
+            ),
+            'Estadísticas'
+        );
+
+        XLSX.utils.book_append_sheet(
+            wb,XLSX.ultils.aoa_to_sheet(
+                ganancias
+            ),
+            'Ganancias'
+        );
+
+        XLSX.writeFile(
+
+            wb,
+
+            `Reporte_${tipo}_${new Date()
+                .toISOString()
+                .split('T')[0]
+            }.xlsx`
+
+        );
+
+        showToast(
+            'Reporte generado correctamente'
+        );
+
+    }
+
+    catch(error) {
+
+        console.error(error);
+
+        showToast(
+            'Error generando reporte',
+            'error'
+        );
+
+    }
 
 }
 
