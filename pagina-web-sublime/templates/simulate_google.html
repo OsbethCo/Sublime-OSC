@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión con Google</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --google-blue: #1a73e8;
+            --google-blue-hover: #1557b0;
+            --border-color: #dadce0;
+            --text-color: #202124;
+            --text-muted: #5f6368;
+            --bg-color: #ffffff;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f4f9;
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .login-card {
+            background: var(--bg-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 450px;
+            padding: 40px;
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: -1.5px;
+        }
+
+        .logo span:nth-child(1) { color: #4285F4; }
+        .logo span:nth-child(2) { color: #EA4335; }
+        .logo span:nth-child(3) { color: #FBBC05; }
+        .logo span:nth-child(4) { color: #4285F4; }
+        .logo span:nth-child(5) { color: #34A853; }
+        .logo span:nth-child(6) { color: #EA4335; }
+
+        .title {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin: 0 0 8px 0;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .account-list {
+            margin-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .account-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+        }
+
+        .account-item:hover {
+            background-color: #f7f8f8;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--google-blue);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 12px;
+            font-size: 0.9rem;
+        }
+
+        .account-details {
+            flex-grow: 1;
+        }
+
+        .account-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: block;
+        }
+
+        .account-email {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .btn-link {
+            background: none;
+            border: none;
+            color: var(--google-blue);
+            font-weight: 500;
+            cursor: pointer;
+            padding: 16px 10px;
+            font-size: 0.9rem;
+            text-align: left;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.2s;
+            border-radius: 4px;
+        }
+
+        .btn-link:hover {
+            color: var(--google-blue-hover);
+            background-color: #f7f8f8;
+        }
+
+        .form-group {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--google-blue);
+            border-width: 2px;
+            padding: 15px 13px;
+        }
+
+        .form-label {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            pointer-events: none;
+            background-color: white;
+            padding: 0 6px;
+        }
+
+        .form-input:focus ~ .form-label,
+        .form-input:not(:placeholder-shown) ~ .form-label {
+            top: 0;
+            font-size: 0.75rem;
+            color: var(--google-blue);
+            font-weight: 500;
+        }
+
+        .btn-submit {
+            background-color: var(--google-blue);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 12px 24px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.9rem;
+            float: right;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--google-blue-hover);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+
+        .actions {
+            margin-top: 30px;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .back-btn:hover {
+            background-color: #f1f3f4;
+            color: var(--text-color);
+        }
+
+        .hidden {
+            display: none;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="header">
+            <div class="logo">
+                <span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span>
+            </div>
+            <h1 class="title" id="cardTitle">Elegir una cuenta</h1>
+            <p class="subtitle">para continuar en Sublime</p>
+        </div>
+
+        <!-- Vista de selección de cuentas rápidas -->
+        <div id="accountsView" class="fade-in">
+            <div class="account-list">
+                <div class="account-item" onclick="selectQuickAccount('Juan Pérez', 'juan.perez@gmail.com')">
+                    <div class="avatar" style="background-color: #e67e22;">J</div>
+                    <div class="account-details">
+                        <span class="account-name">Juan Pérez</span>
+                        <span class="account-email">juan.perez@gmail.com</span>
+                    </div>
+                </div>
+                <div class="account-item" onclick="selectQuickAccount('María Rodríguez', 'maria.rodriguez@gmail.com')">
+                    <div class="avatar" style="background-color: #9b59b6;">M</div>
+                    <div class="account-details">
+                        <span class="account-name">María Rodríguez</span>
+                        <span class="account-email">maria.rodriguez@gmail.com</span>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-link" onclick="showFormView()">
+                <i class="fa-solid fa-user-plus"></i> Usar otra cuenta
+            </button>
+        </div>
+
+        <!-- Vista de formulario manual -->
+        <div id="formView" class="hidden">
+            <form id="loginForm" onsubmit="handleManualSubmit(event)">
+                <div class="form-group">
+                    <input type="email" id="email" required class="form-input" placeholder=" ">
+                    <label class="form-label" for="email">Correo electrónico</label>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="username" required class="form-input" placeholder=" ">
+                    <label class="form-label" for="username">Nombre de usuario</label>
+                </div>
+                
+                <div class="actions" style="width: 100%;">
+                    <button type="button" class="back-btn" onclick="showAccountsView()">Atrás</button>
+                    <button type="submit" class="btn-submit">Siguiente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const linkMode = "{{ 'true' if link_mode else 'false' }}";
+
+        function showFormView() {
+            document.getElementById('accountsView').classList.add('hidden');
+            document.getElementById('formView').classList.remove('hidden');
+            document.getElementById('formView').classList.add('fade-in');
+            document.getElementById('cardTitle').innerText = 'Iniciar sesión';
+        }
+
+        function showAccountsView() {
+            document.getElementById('formView').classList.add('hidden');
+            document.getElementById('accountsView').classList.remove('hidden');
+            document.getElementById('cardTitle').innerText = 'Elegir una cuenta';
+        }
+
+        function selectQuickAccount(name, email) {
+            submitOauth(name, email);
+        }
+
+        function handleManualSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const name = document.getElementById('username').value.trim();
+            if (email && name) {
+                submitOauth(name, email);
+            }
+        }
+
+        function submitOauth(name, email) {
+            const providerId = 'google_' + Math.floor(100000000 + Math.random() * 900000000);
+            let redirectUrl = `/login/google?username=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&provider_id=${encodeURIComponent(providerId)}`;
+            if (linkMode === 'true') {
+                redirectUrl += '&link=true';
+            }
+
+            if (window.opener && !window.opener.closed) {
+                window.opener.location.href = redirectUrl;
+                window.close();
+            } else {
+                window.location.href = redirectUrl;
+            }
+        }
+    </script>
+</body>
+</html>

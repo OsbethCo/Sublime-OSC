@@ -1780,6 +1780,17 @@ def newsletter():
     flash(msg, status)
     return redirect(request.referrer or url_for('home'))
 
+@app.route('/login/google/simulate')
+def simulate_google_route():
+    link_mode = request.args.get('link') == 'true'
+    return render_template('simulate_google.html', link_mode=link_mode)
+
+
+@app.route('/login/facebook/simulate')
+def simulate_facebook_route():
+    link_mode = request.args.get('link') == 'true'
+    return render_template('simulate_facebook.html', link_mode=link_mode)
+
 
 @app.route('/login/google')
 def login_google():

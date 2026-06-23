@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión en Facebook</title>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --fb-blue: #1877f2;
+            --fb-blue-hover: #166fe5;
+            --fb-grey: #f0f2f5;
+            --border-color: #dddfe2;
+            --text-color: #1c1e21;
+            --text-muted: #606770;
+            --bg-color: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--fb-grey);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .login-card {
+            background: var(--bg-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
+            width: 100%;
+            max-width: 400px;
+            padding: 30px 24px;
+            box-sizing: border-box;
+            border: none;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            color: var(--fb-blue);
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: var(--text-color);
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin: 0 0 20px 0;
+        }
+
+        .account-list {
+            margin-top: 15px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 10px;
+        }
+
+        .account-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .account-item:hover {
+            background-color: #f5f6f7;
+            border-color: #ccd0d5;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--fb-blue);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 12px;
+            font-size: 1rem;
+        }
+
+        .account-details {
+            flex-grow: 1;
+        }
+
+        .account-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: block;
+        }
+
+        .account-email {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .btn-link {
+            background: none;
+            border: none;
+            color: var(--fb-blue);
+            font-weight: 600;
+            cursor: pointer;
+            padding: 10px 0;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            transition: text-decoration 0.2s;
+        }
+
+        .btn-link:hover {
+            text-decoration: underline;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+            outline: none;
+            background-color: #ffffff;
+            color: var(--text-color);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--fb-blue);
+            box-shadow: 0 0 0 2px #e7f3ff;
+        }
+
+        .btn-submit {
+            background-color: var(--fb-blue);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--fb-blue-hover);
+        }
+
+        .actions {
+            margin-top: 20px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 15px;
+            display: inline-block;
+            transition: text-decoration 0.2s;
+        }
+
+        .back-btn:hover {
+            text-decoration: underline;
+        }
+
+        .hidden {
+            display: none;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="header">
+            <div class="logo">facebook</div>
+            <h1 class="title" id="cardTitle">Iniciar sesión con Facebook</h1>
+            <p class="subtitle" id="cardSubtitle">Vincular con tu cuenta de Sublime</p>
+        </div>
+
+        <!-- Vista de cuentas rápidas -->
+        <div id="accountsView" class="fade-in">
+            <div class="account-list">
+                <div class="account-item" onclick="selectQuickAccount('Juan Pérez', 'juan.perez@facebook.com')">
+                    <div class="avatar" style="background-color: #3b5998;">JP</div>
+                    <div class="account-details">
+                        <span class="account-name">Juan Pérez</span>
+                        <span class="account-email">juan.perez@facebook.com</span>
+                    </div>
+                </div>
+                <div class="account-item" onclick="selectQuickAccount('María Rodríguez', 'maria.rodriguez@facebook.com')">
+                    <div class="avatar" style="background-color: #4b67a2;">MR</div>
+                    <div class="account-details">
+                        <span class="account-name">María Rodríguez</span>
+                        <span class="account-email">maria.rodriguez@facebook.com</span>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-link" onclick="showFormView()">
+                <i class="fa-solid fa-circle-plus"></i> Usar otra cuenta
+            </button>
+        </div>
+
+        <!-- Vista de formulario manual -->
+        <div id="formView" class="hidden">
+            <form id="loginForm" onsubmit="handleManualSubmit(event)">
+                <div class="form-group">
+                    <input type="email" id="email" required class="form-input" placeholder="Correo electrónico o teléfono" aria-label="Correo electrónico o teléfono">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="username" required class="form-input" placeholder="Nombre completo" aria-label="Nombre completo">
+                </div>
+                
+                <button type="submit" class="btn-submit">Iniciar sesión</button>
+                
+                <div class="actions">
+                    <button type="button" class="back-btn" onclick="showAccountsView()">Volver a cuentas rápidas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const linkMode = "{{ 'true' if link_mode else 'false' }}";
+
+        function showFormView() {
+            document.getElementById('accountsView').classList.add('hidden');
+            document.getElementById('formView').classList.remove('hidden');
+            document.getElementById('formView').classList.add('fade-in');
+            document.getElementById('cardTitle').innerText = 'Ingresar datos de Facebook';
+            document.getElementById('cardSubtitle').classList.add('hidden');
+        }
+
+        function showAccountsView() {
+            document.getElementById('formView').classList.add('hidden');
+            document.getElementById('accountsView').classList.remove('hidden');
+            document.getElementById('cardTitle').innerText = 'Iniciar sesión con Facebook';
+            document.getElementById('cardSubtitle').classList.remove('hidden');
+        }
+
+        function selectQuickAccount(name, email) {
+            submitOauth(name, email);
+        }
+
+        function handleManualSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const name = document.getElementById('username').value.trim();
+            if (email && name) {
+                submitOauth(name, email);
+            }
+        }
+
+        function submitOauth(name, email) {
+            const providerId = 'facebook_' + Math.floor(100000000 + Math.random() * 900000000);
+            let redirectUrl = `/login/facebook?username=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&provider_id=${encodeURIComponent(providerId)}`;
+            if (linkMode === 'true') {
+                redirectUrl += '&link=true';
+            }
+
+            if (window.opener && !window.opener.closed) {
+                window.opener.location.href = redirectUrl;
+                window.close();
+            } else {
+                window.location.href = redirectUrl;
+            }
+        }
+    </script>
+</body>
+</html>

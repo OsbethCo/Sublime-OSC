@@ -5,40 +5,40 @@
 {% endblock %}
 
 {% block content %}
-<div class="auth-container glass-card" style="text-align: center; position: relative; overflow: hidden; padding: 50px 40px; margin-top: 4rem; margin-bottom: 4rem; border-radius: 25px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05); background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+<div class="auth-container glass-card" style="text-align: center; position: relative; overflow: hidden; padding: 40px 30px; margin-top: 3rem; margin-bottom: 3rem; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05); background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
     <!-- Decoración de fondo -->
     <div style="position: absolute; top: -100px; left: -100px; width: 250px; height: 250px; background: radial-gradient(circle, rgba(0, 255, 128, 0.25) 0%, rgba(0, 0, 0, 0) 70%); filter: blur(40px); z-index: 0; animation: pulseGlow 7s ease-in-out infinite alternate;"></div>
     <div style="position: absolute; bottom: -100px; right: -100px; width: 250px; height: 250px; background: radial-gradient(circle, rgba(0, 179, 80, 0.2) 0%, rgba(0, 0, 0, 0) 70%); filter: blur(40px); z-index: 0; animation: pulseGlow 6s ease-in-out infinite alternate-reverse;"></div>
     
     <div style="position: relative; z-index: 1;">
         <!-- Logo de la pagina (la taza con la S) -->
-        <div style="display: flex; justify-content: center; margin-bottom: 25px;">
-            <div style="background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 50%; box-shadow: 0 0 30px rgba(0, 255, 128, 0.15), inset 0 0 15px rgba(0, 255, 128, 0.1); border: 1px solid rgba(0, 255, 128, 0.2);">
-                <img src="{{ url_for('static', filename='images/logo_icon.png') }}" alt="Sublime's Logo" style="width: 80px; height: auto; filter: drop-shadow(0 0 10px rgba(0, 255, 128, 0.6)); animation: float 4s ease-in-out infinite;">
+        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+            <div style="background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 50%; box-shadow: 0 0 25px rgba(0, 255, 128, 0.15), inset 0 0 10px rgba(0, 255, 128, 0.1); border: 1px solid rgba(0, 255, 128, 0.2);">
+                <img src="{{ url_for('static', filename='images/logo_icon.png') }}" alt="Sublime's Logo" style="width: 65px; height: auto; filter: drop-shadow(0 0 10px rgba(0, 255, 128, 0.6)); animation: float 4s ease-in-out infinite;">
             </div>
         </div>
         
-        <h1 style="font-size: 2.5rem; margin-bottom: 8px; font-weight: 900; letter-spacing: -1px; background: linear-gradient(135deg, #ffffff 0%, #00ff80 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 4px 20px rgba(0, 255, 128, 0.2);">AGREGAR USUARIO</h1>
-        <p style="color: var(--text-muted); margin-bottom: 35px; font-size: 1rem; font-weight: 500;">Únete a Sublime's y crea tu cuenta hoy</p>
+        <h1 style="font-size: 2rem; margin-bottom: 6px; font-weight: 900; letter-spacing: -1px; background: linear-gradient(135deg, #ffffff 0%, #00ff80 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 4px 20px rgba(0, 255, 128, 0.2);">AGREGAR USUARIO</h1>
+        <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 0.95rem; font-weight: 500;">Únete a Sublime's y crea tu cuenta hoy</p>
         
         <form action="{{ url_for('registro') }}" method="POST" style="text-align: left;">
-            <div class="input-group" style="margin-bottom: 20px; position: relative;">
+            <div class="input-group" style="margin-bottom: 16px; position: relative;">
                 <i class="fa-solid fa-user input-icon" style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.1rem; z-index: 2; transition: all 0.3s ease;"></i>
                 <input type="text" name="username" placeholder="Nombre de Usuario" required class="glass-input">
             </div>
 
-            <div class="input-group" style="margin-bottom: 20px; position: relative;">
+            <div class="input-group" style="margin-bottom: 16px; position: relative;">
                 <i class="fa-solid fa-envelope input-icon" style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.1rem; z-index: 2; transition: all 0.3s ease;"></i>
                 <input type="email" name="email" placeholder="Correo Electrónico" required class="glass-input">
             </div>
             
-            <div class="input-group" style="margin-bottom: 25px; position: relative;">
+            <div class="input-group" style="margin-bottom: 20px; position: relative;">
                 <i class="fa-solid fa-lock input-icon" style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.1rem; z-index: 2; transition: all 0.3s ease;"></i>
                 <input type="password" name="password" id="password" placeholder="Contraseña" required class="glass-input">
                 <i class="fa-solid fa-eye-slash password-toggle" id="togglePassword" style="position: absolute; right: 18px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer; z-index: 2; transition: color 0.3s ease;"></i>
             </div>
             
-            <div class="auth-extras" style="display: flex; justify-content: flex-start; align-items: center; margin-bottom: 35px; font-size: 0.95rem;">
+            <div class="auth-extras" style="display: flex; justify-content: flex-start; align-items: center; margin-bottom: 25px; font-size: 0.9rem;">
                 <label class="remember-me custom-checkbox" style="color: var(--text-muted);">
                     <input type="checkbox" required>
                     <span class="checkmark"></span>
@@ -46,7 +46,7 @@
                 </label>
             </div>
             
-            <button type="submit" class="btn-primary glow-btn" style="width: 100%; padding: 16px; border-radius: 15px; font-size: 1.1rem; letter-spacing: 2px; border: none; cursor: pointer; text-transform: uppercase; font-weight: 900; background: var(--primary-grad); color: #000; position: relative; overflow: hidden;">
+            <button type="submit" class="btn-primary glow-btn" style="width: 100%; padding: 13px; border-radius: 12px; font-size: 1rem; letter-spacing: 2px; border: none; cursor: pointer; text-transform: uppercase; font-weight: 900; background: var(--primary-grad); color: #000; position: relative; overflow: hidden;">
                 <span style="position: relative; z-index: 1;">REGISTRARSE</span>
             </button>
         </form>
@@ -57,10 +57,10 @@
         </div>
         
         <div class="social-buttons" style="display: flex; gap: 15px; margin-bottom: 25px;">
-            <a href="#" class="social-btn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px; border-radius: 50px; background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.5px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <a href="#" onclick="openSocialLogin('google'); return false;" class="social-btn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px; border-radius: 50px; background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.5px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                 <i class="fa-brands fa-google" style="background: linear-gradient(135deg, #ea4335, #fbbc05, #34a853, #4285f4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 1.3rem;"></i> Google
             </a>
-            <a href="#" class="social-btn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px; border-radius: 50px; background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.5px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <a href="#" onclick="openSocialLogin('facebook'); return false;" class="social-btn" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px; border-radius: 50px; background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; letter-spacing: 0.5px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                 <i class="fa-brands fa-facebook-f" style="color: #1877f2; font-size: 1.3rem; text-shadow: 0 0 10px rgba(24, 119, 242, 0.4);"></i> Facebook
             </a>
         </div>

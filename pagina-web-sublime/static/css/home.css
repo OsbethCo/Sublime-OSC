@@ -127,19 +127,41 @@
 }
 
 .category-card:hover {
-    transform: translateY(-10px);
+    transform: translateY(-8px);
     border-color: #00b350;
     box-shadow: 0 15px 30px rgba(0, 179, 80, 0.15);
 }
 
+.category-icon-wrapper {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: rgba(0, 255, 128, 0.03);
+    border: 1px solid rgba(0, 255, 128, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 25px auto;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 0 10px rgba(0, 255, 128, 0.05);
+}
+
+.category-card:hover .category-icon-wrapper {
+    background: rgba(0, 255, 128, 0.08);
+    border-color: #00ff80;
+    box-shadow: 0 0 20px rgba(0, 255, 128, 0.2), inset 0 0 10px rgba(0, 255, 128, 0.1);
+    transform: translateY(-2px);
+}
+
 .category-card i {
-    transition: transform 0.4s;
-    display: inline-block;
+    font-size: 1.8rem;
     color: #00ff80;
+    transition: transform 0.4s ease;
+    display: inline-block;
 }
 
 .category-card:hover i {
-    transform: scale(1.2) rotate(5deg);
+    transform: scale(1.1) rotate(5deg);
 }
 
 .testimonials-grid {

@@ -116,7 +116,7 @@
                                 <button type="submit" class="btn-outline" style="border-color: #ff4a4a; color: #ff4a4a; padding: 6px 15px; font-size: 0.8rem; border-radius: 20px; background: rgba(255,74,74,0.05); cursor: pointer; transition: all 0.3s;">Desvincular</button>
                             </form>
                             {% else %}
-                            <a href="{{ url_for('login_google', link='true') }}" class="btn-primary" style="padding: 6px 15px; font-size: 0.8rem; border-radius: 20px; text-decoration: none;">Vincular</a>
+                            <a href="#" onclick="openSocialLogin('google', true); return false;" class="btn-primary" style="padding: 6px 15px; font-size: 0.8rem; border-radius: 20px; text-decoration: none;">Vincular</a>
                             {% endif %}
                         </div>
                     </div>
@@ -140,7 +140,7 @@
                                 <button type="submit" class="btn-outline" style="border-color: #ff4a4a; color: #ff4a4a; padding: 6px 15px; font-size: 0.8rem; border-radius: 20px; background: rgba(255,74,74,0.05); cursor: pointer; transition: all 0.3s;">Desvincular</button>
                             </form>
                             {% else %}
-                            <a href="{{ url_for('login_facebook', link='true') }}" class="btn-primary" style="padding: 6px 15px; font-size: 0.8rem; border-radius: 20px; text-decoration: none;">Vincular</a>
+                            <a href="#" onclick="openSocialLogin('facebook', true); return false;" class="btn-primary" style="padding: 6px 15px; font-size: 0.8rem; border-radius: 20px; text-decoration: none;">Vincular</a>
                             {% endif %}
                         </div>
                     </div>

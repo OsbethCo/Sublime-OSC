@@ -134,6 +134,25 @@
             parent.classList.toggle('active');
         });
     });
+
+    // Función global para abrir popups de login social
+    function openSocialLogin(provider, linkMode = false) {
+        const width = 600;
+        const height = 650;
+        const left = (screen.width - width) / 2;
+        const top = (screen.height - height) / 2;
+        
+        let url = `/login/` + provider + `/simulate`;
+        if (linkMode) {
+            url += '?link=true';
+        }
+        
+        window.open(
+            url,
+            provider + `_login`,
+            `width=${width},height=${height},left=${left},top=${top},status=no,resizable=yes,scrollbars=yes`
+        );
+    }
     </script>
 
     <!-- Shein-style Add to Cart Modal -->
