@@ -10,7 +10,8 @@ from models import db, User, Product, Order
 app = Flask(__name__)
 app.secret_key = 'super_secret_key_for_sublime'
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-SHARED_DB_PATH = os.path.abspath(os.path.join(BASE_DIR, '..', 'Sublime', 'BD', 'database.db'))
+_default_db = os.path.abspath(os.path.join(BASE_DIR, '..', 'Sublime', 'BD', 'database.db'))
+SHARED_DB_PATH = os.environ.get('DATABASE_PATH', _default_db)
 SHARED_SQL_PATH = os.path.abspath(os.path.join(BASE_DIR, '..', 'Sublime', 'BD', 'database.sql'))
 ADMIN_PANEL_DIR = os.path.abspath(os.path.join(BASE_DIR, '..', 'Sublime', 'admin-panel'))
 
