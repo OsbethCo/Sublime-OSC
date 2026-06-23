@@ -430,19 +430,19 @@ body{
 ========================= */
 
 .inventory-box{
-    height:140px;
+    height:250px;
 }
 
 .chart-donut{
-    height:90px;
+    height:190px;
     display:flex;
     justify-content:center;
     align-items:center;
 }
 
 #donutChart{
-    max-width:100px !important;
-    max-height:100px !important;
+    max-width:180px !important;
+    max-height:180px !important;
 }
 
 .chart-line-box{

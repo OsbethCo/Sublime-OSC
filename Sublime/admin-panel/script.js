@@ -48,6 +48,22 @@ function apiRequest(endpoint, options = {}) {
     });
  
 }
+
+function apiUploadRequest(endpoint, file) {
+    const url = `${apiBase}/${endpoint}`;
+    const formData = new FormData();
+    formData.append('file', file);
+    return fetch(url, {
+        method: 'POST',
+        body: formData
+    }).then(async response => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.message || 'Error al subir archivo');
+        }
+        return data;
+    });
+}
  
 function formatCurrency(value) {
     
@@ -433,11 +449,15 @@ async function loadInventory() {
                 showToast(`Stock bajo: ${item.nombre}`, 'error');  
             }  
   
+            const isUrl = item.imagen && (item.imagen.startsWith('http://') || item.imagen.startsWith('https://'));
+            const imageSrc = item.imagen ? (isUrl ? item.imagen : `/static/images/${item.imagen}`) : '/static/images/placeholder.png';
+  
             return `  
             <tr>  
+                <td><img src="${imageSrc}" alt="${item.nombre}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border);"></td>
                 <td>${item.nombre}</td>  
                 <td>${item.categoria || 'Sin categoría'}</td>  
-                <td>${formatCurrency(item.precio)}</td>  
+                <td>${formatCurrency(item.precio)}<br><small style="color: var(--muted); font-size: 0.8rem;">Con IVA: ${formatCurrency(item.precio * (1 + getCurrentIVA() / 100))}</small></td>  
                 <td>${item.stock}</td>  
                 <td>  
                     <button class="btn-edit"  
@@ -1341,7 +1361,7 @@ async function generarExcel(tipo) {
         );
  
         XLSX.utils.book_append_sheet(
-            wb,XLSX.ultils.aoa_to_sheet(
+            wb,XLSX.utils.aoa_to_sheet(
                 ganancias
             ),
             'Ganancias'
@@ -1508,6 +1528,8 @@ if (productForm) {
         const precio = Number(document.getElementById('productPrice').value);
         const stock = Number(document.getElementById('productStock').value);
         const descripcion = document.getElementById('productDescription').value;
+        const imageFileEl = document.getElementById('productImage');
+        const imageUrlEl = document.getElementById('productImageUrl');
  
         if (!nombre || !categoria || isNaN(precio) || isNaN(stock)) {
             showToast('Completa nombre, categoría, precio y stock.', 'error');
@@ -1515,6 +1537,14 @@ if (productForm) {
         }
  
         try {
+            let imagen = imageUrlEl ? imageUrlEl.value : '';
+
+            // Si el usuario seleccionó un archivo de imagen, lo subimos primero
+            if (imageFileEl && imageFileEl.files.length > 0) {
+                const uploadRes = await apiUploadRequest('upload', imageFileEl.files[0]);
+                imagen = uploadRes.filename;
+            }
+
             await apiRequest('product', {
                 method: 'POST',
                 body: {
@@ -1522,11 +1552,16 @@ if (productForm) {
                     categoria,
                     precio,
                     stock,
-                    descripcion
+                    descripcion,
+                    imagen
                 }
             });
  
             productForm.reset();
+            const priceIvaEl = document.getElementById('productPriceWithIva');
+            if (priceIvaEl) {
+                priceIvaEl.textContent = `Con IVA (${getCurrentIVA()}%): $0.00`;
+            }
             cerrarProductModal();
             await Promise.all([
                 loadInventory(),
@@ -1774,6 +1809,21 @@ async function openEditProduct(id) {
         document.getElementById('editStock').value = product.stock;
         document.getElementById('editImagen').value = product.imagen || '';
         document.getElementById('editDescripcion').value = product.descripcion || '';
+        
+        // Limpiar el campo de archivo al abrir
+        const fileInput = document.getElementById('editImageFile');
+        if (fileInput) {
+            fileInput.value = '';
+        }
+
+        // Calcular e ilustrar el precio con IVA
+        const val = parseFloat(product.precio) || 0;
+        const iva = getCurrentIVA();
+        const finalPrice = val * (1 + iva / 100);
+        const priceIvaEl = document.getElementById('editPrecioWithIva');
+        if (priceIvaEl) {
+            priceIvaEl.textContent = `Con IVA (${iva}%): ${formatCurrency(finalPrice)}`;
+        }
  
         document.getElementById('editProductModal').classList.add('active');
  
@@ -1806,8 +1856,17 @@ document
     .addEventListener('click', async () => {
  
     const id = document.getElementById('editId').value;
+    const editImageFile = document.getElementById('editImageFile');
+    const editImagen = document.getElementById('editImagen');
  
     try {
+        let imagen = editImagen ? editImagen.value : '';
+
+        // Si el usuario seleccionó un archivo de imagen, lo subimos primero
+        if (editImageFile && editImageFile.files.length > 0) {
+            const uploadRes = await apiUploadRequest('upload', editImageFile.files[0]);
+            imagen = uploadRes.filename;
+        }
  
         await apiRequest(`product/${id}`, {
             method: 'PUT',
@@ -1816,7 +1875,8 @@ document
                 categoria: document.getElementById('editCategoria').value,
                 precio: Number(document.getElementById('editPrecio').value),
                 stock: Number(document.getElementById('editStock').value),
-                descripcion: document.getElementById('editDescripcion').value
+                descripcion: document.getElementById('editDescripcion').value,
+                imagen: imagen
             }
         });
  
@@ -1824,7 +1884,11 @@ document
             .getElementById('editProductModal')
             .classList.remove('active');
  
-        await loadInventory();
+        await Promise.all([
+            loadInventory(),
+            loadSalesData(),
+            loadDashboard()
+        ]);
         showToast('Producto actualizado correctamente', 'success');
  
     } catch (error) {
@@ -2048,4 +2112,33 @@ function deleteClientCard(btn){
         'error'
     );
 }
+
+// Escuchar cambios en los inputs de precios para calcular e ilustrar precio con IVA en tiempo real
+window.addEventListener('DOMContentLoaded', () => {
+    const productPriceInput = document.getElementById('productPrice');
+    if (productPriceInput) {
+        productPriceInput.addEventListener('input', () => {
+            const val = parseFloat(productPriceInput.value) || 0;
+            const iva = getCurrentIVA();
+            const finalPrice = val * (1 + iva / 100);
+            const priceIvaEl = document.getElementById('productPriceWithIva');
+            if (priceIvaEl) {
+                priceIvaEl.textContent = `Con IVA (${iva}%): ${formatCurrency(finalPrice)}`;
+            }
+        });
+    }
+
+    const editPrecioInput = document.getElementById('editPrecio');
+    if (editPrecioInput) {
+        editPrecioInput.addEventListener('input', () => {
+            const val = parseFloat(editPrecioInput.value) || 0;
+            const iva = getCurrentIVA();
+            const finalPrice = val * (1 + iva / 100);
+            const priceIvaEl = document.getElementById('editPrecioWithIva');
+            if (priceIvaEl) {
+                priceIvaEl.textContent = `Con IVA (${iva}%): ${formatCurrency(finalPrice)}`;
+            }
+        });
+    }
+});
  

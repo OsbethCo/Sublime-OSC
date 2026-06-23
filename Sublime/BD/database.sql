@@ -581,18 +581,6 @@ CREATE TABLE servicios_personalizacion (
 );
 
 -- =========================================================
--- SERVICIOS DE PERSONALIZACIÓN
--- =========================================================
-
-CREATE TABLE servicios_personalizacion (
-    id_servicio INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre VARCHAR(100) NOT NULL,
-    descripcion TEXT,
-    precio_usd DECIMAL(10,2) NOT NULL,
-    activo INTEGER DEFAULT 1
-);
-
--- =========================================================
 -- DETALLE PERSONALIZACIÓN
 -- =========================================================
 
@@ -614,26 +602,6 @@ CREATE TABLE detalle_personalizacion (
 
     FOREIGN KEY (id_servicio)
     REFERENCES servicios_personalizacion(id_servicio)
-);
-
--- =========================================================
--- DETALLE DISEÑO
--- =========================================================
-
-CREATE TABLE detalle_diseno (
-    id_detalle INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    id_personalizacion INTEGER NOT NULL,
-
-    id_diseno INTEGER NOT NULL,
-
-    precio DECIMAL(10,2),
-
-    FOREIGN KEY (id_personalizacion)
-    REFERENCES personalizaciones(id_personalizacion),
-
-    FOREIGN KEY (id_diseno)
-    REFERENCES servicios_diseno(id_diseno)
 );
 
 -- =========================================================
@@ -771,3 +739,19 @@ BEGIN
     );
 
 END;
+
+-- =========================================================
+-- CUENTAS VINCULADAS
+-- =========================================================
+
+CREATE TABLE IF NOT EXISTS cuentas_vinculadas (
+    id_vinculacion INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_usuario INTEGER NOT NULL,
+    proveedor TEXT NOT NULL CHECK(proveedor IN ('google', 'facebook')),
+    proveedor_id TEXT NOT NULL,
+    proveedor_correo TEXT,
+    fecha_vinculacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(proveedor, proveedor_id),
+    UNIQUE(id_usuario, proveedor),
+    FOREIGN KEY(id_usuario) REFERENCES usuarios(id_usuario)
+);

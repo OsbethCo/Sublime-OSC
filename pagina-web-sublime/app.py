@@ -502,10 +502,21 @@ def api_products():
 
 @app.route('/api/product/<int:product_id>', methods=['GET'])
 def api_product(product_id):
-    producto = fetch_product_by_id(product_id)
-    if not producto:
+    conn = get_shared_db()
+    row = conn.execute(
+        'SELECT p.id_producto, p.nombre, p.descripcion, p.precio_venta AS precio, c.nombre AS categoria, '
+        'IFNULL(i.stock_actual, 0) AS stock, '
+        '(SELECT ip.ruta_imagen FROM imagenes_productos ip WHERE ip.id_producto = p.id_producto ORDER BY ip.id_imagen LIMIT 1) AS imagen '
+        'FROM productos p '
+        'LEFT JOIN categorias c ON p.id_categoria = c.id_categoria '
+        'LEFT JOIN inventario i ON i.id_producto = p.id_producto '
+        'WHERE p.activo = 1 AND p.id_producto = ?',
+        (product_id,)
+    ).fetchone()
+    conn.close()
+    if not row:
         return jsonify({'mensaje': 'Producto no encontrado.'}), 404
-    return jsonify({'producto': producto})
+    return jsonify({'product': dict(row)})
 
 
 def get_cliente_id_by_session():
@@ -874,7 +885,8 @@ def api_dashboard():
 def api_inventory():
     conn = get_shared_db()
     inventory = conn.execute(
-        'SELECT p.id_producto, p.nombre, p.precio_venta AS precio, IFNULL(i.stock_actual, 0) AS stock, c.nombre AS categoria '
+        'SELECT p.id_producto, p.nombre, p.precio_venta AS precio, IFNULL(i.stock_actual, 0) AS stock, c.nombre AS categoria, '
+        '(SELECT ip.ruta_imagen FROM imagenes_productos ip WHERE ip.id_producto = p.id_producto ORDER BY ip.id_imagen LIMIT 1) AS imagen '
         'FROM productos p '
         'LEFT JOIN categorias c ON p.id_categoria = c.id_categoria '
         'LEFT JOIN inventario i ON i.id_producto = p.id_producto '
@@ -1039,6 +1051,28 @@ def api_report_data():
             'message': str(e)
         }), 500
 
+@app.route('/api/upload', methods=['POST'])
+def api_upload_file():
+    if 'file' not in request.files:
+        return jsonify({'message': 'No se encontró archivo en la petición.'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'message': 'Nombre de archivo vacío.'}), 400
+    
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'avif'}
+    def allowed_file(filename):
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+        
+    if file and allowed_file(file.filename):
+        from werkzeug.utils import secure_filename
+        filename = secure_filename(file.filename)
+        filename = f"{int(time.time())}_{filename}"
+        save_dir = os.path.join(BASE_DIR, "static", "images")
+        os.makedirs(save_dir, exist_ok=True)
+        file.save(os.path.join(save_dir, filename))
+        return jsonify({'message': 'Archivo subido correctamente.', 'filename': filename}), 200
+    return jsonify({'message': 'Tipo de archivo no permitido.'}), 400
+
 @app.route('/api/product', methods=['POST'])
 def api_create_product():
     data = request.get_json() or {}
@@ -1047,6 +1081,7 @@ def api_create_product():
     precio = data.get('precio')
     stock = data.get('stock', 0)
     descripcion = data.get('descripcion', '')
+    imagen = data.get('imagen')
 
     if not nombre or not categoria or precio is None:
         return jsonify({'message': 'Nombre, categoría y precio son requeridos.'}), 400
@@ -1065,6 +1100,10 @@ def api_create_product():
     )
     product_id = product_cursor.lastrowid
     conn.execute('INSERT INTO inventario (id_producto, stock_actual) VALUES (?, ?)', (product_id, stock))
+    
+    if imagen:
+        conn.execute('INSERT INTO imagenes_productos (id_producto, ruta_imagen) VALUES (?, ?)', (product_id, imagen))
+        
     conn.commit()
     conn.close()
     return jsonify({'message': 'Producto creado correctamente.', 'id_producto': product_id}), 201
@@ -1077,6 +1116,7 @@ def api_update_product(product_id):
     precio = data.get('precio')
     stock = data.get('stock')
     descripcion = data.get('descripcion', '')
+    imagen = data.get('imagen')
 
     if not nombre or not categoria or precio is None or stock is None:
         return jsonify({'message': 'Nombre, categoría, precio y stock son requeridos.'}), 400
@@ -1096,6 +1136,14 @@ def api_update_product(product_id):
         conn.execute('UPDATE inventario SET stock_actual = ? WHERE id_producto = ?', (stock, product_id))
     else:
         conn.execute('INSERT INTO inventario (id_producto, stock_actual) VALUES (?, ?)', (product_id, stock))
+        
+    if imagen is not None:
+        existing_img = conn.execute('SELECT id_imagen FROM imagenes_productos WHERE id_producto = ? LIMIT 1', (product_id,)).fetchone()
+        if existing_img:
+            conn.execute('UPDATE imagenes_productos SET ruta_imagen = ? WHERE id_producto = ?', (imagen, product_id))
+        else:
+            conn.execute('INSERT INTO imagenes_productos (id_producto, ruta_imagen) VALUES (?, ?)', (product_id, imagen))
+            
     conn.commit()
     conn.close()
     return jsonify({'message': 'Producto actualizado correctamente.'})
@@ -1422,22 +1470,22 @@ def checkout():
                 (pedido_id, product_id, cantidad, item['price'])
             )
 
-    conn.execute(
-        'INSERT INTO envios (id_pedido, direccion_envio, empresa_envio, numero_guia, estado_envio, fecha_envio) VALUES (?, ?, ?, ?, ?, datetime("now"))',
-        (pedido_id, address, payment_method or 'Pendiente', reference or '', 'Pendiente',)
-    )
-    conn.commit()
-    conn.close()
+        conn.execute(
+            'INSERT INTO envios (id_pedido, direccion_envio, empresa_envio, numero_guia, estado_envio, fecha_envio) VALUES (?, ?, ?, ?, ?, datetime("now"))',
+            (pedido_id, address, payment_method or 'Pendiente', reference or '', 'Pendiente',)
+        )
+        conn.commit()
+        conn.close()
 
-    # Limpiar carrito y checkout
-    if 'checkout_items' in session:
-        session.pop('checkout_items', None)
-    if 'user_id' in session:
-        save_cart_to_db([])
-    else:
-        session.pop('cart', None)
-    
-    return redirect(url_for('factura', order_id=pedido_id))
+        # Limpiar carrito y checkout
+        if 'checkout_items' in session:
+            session.pop('checkout_items', None)
+        if 'user_id' in session:
+            save_cart_to_db([])
+        else:
+            session.pop('cart', None)
+        
+        return redirect(url_for('factura', order_id=pedido_id))
 
     cart_count = len(cart)
     return render_template('checkout.html', total=total, cart_count=cart_count, item_count=len(cart))
@@ -1509,7 +1557,7 @@ def login():
             session['user_id'] = user['id_usuario']
             session['username'] = user['nombre']
             session['user_email'] = user['correo']
-            session['user_role'] = user.get('rol') or 'Trabajador'
+            session['user_role'] = user['rol'] or 'Trabajador'
 
             guest_cart = session.get('cart', [])
             merge_guest_cart_into_db(guest_cart)
@@ -1547,7 +1595,7 @@ def registro():
             role = conn.execute('SELECT id_rol FROM roles WHERE nombre = ? LIMIT 1', ('Trabajador',)).fetchone()
             role_id = role['id_rol'] if role else 2
             conn.execute(
-                'INSERT INTO usuarios VALUES (NULL, ?, ?, ?, ?)',
+                'INSERT INTO usuarios (nombre, correo, contraseña, id_rol) VALUES (?, ?, ?, ?)',
                 (username, email, password, role_id)
             )
             conn.commit()
@@ -1804,7 +1852,7 @@ def login_google():
             else:
                 role = conn.execute('SELECT id_rol FROM roles WHERE nombre = ? LIMIT 1', ('Trabajador',)).fetchone()
                 role_id = role['id_rol'] if role else 2
-                cursor = conn.execute('INSERT INTO usuarios VALUES (NULL, ?, ?, ?, ?)', (username, email, 'oauth_simulated', role_id))
+                cursor = conn.execute('INSERT INTO usuarios (nombre, correo, contraseña, id_rol) VALUES (?, ?, ?, ?)', (username, email, 'oauth_simulated', role_id))
                 user_id = cursor.lastrowid
                 conn.execute(
                     'INSERT INTO cuentas_vinculadas (id_usuario, proveedor, proveedor_id, proveedor_correo) VALUES (?, "google", ?, ?)',
@@ -1896,7 +1944,7 @@ def login_facebook():
             else:
                 role = conn.execute('SELECT id_rol FROM roles WHERE nombre = ? LIMIT 1', ('Trabajador',)).fetchone()
                 role_id = role['id_rol'] if role else 2
-                cursor = conn.execute('INSERT INTO usuarios VALUES (NULL, ?, ?, ?, ?)', (username, email, 'oauth_simulated', role_id))
+                cursor = conn.execute('INSERT INTO usuarios (nombre, correo, contraseña, id_rol) VALUES (?, ?, ?, ?)', (username, email, 'oauth_simulated', role_id))
                 user_id = cursor.lastrowid
                 conn.execute(
                     'INSERT INTO cuentas_vinculadas (id_usuario, proveedor, proveedor_id, proveedor_correo) VALUES (?, "facebook", ?, ?)',
