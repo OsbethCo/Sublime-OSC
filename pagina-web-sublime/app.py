@@ -4,6 +4,7 @@ import json
 import sqlite3
 import urllib.request
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory
+from markupsafe import Markup
 from models import db, User, Product, Order
 
 
@@ -44,6 +45,21 @@ def fetch_bcv_rate():
     except Exception:
         pass
     return BCV_RATE_CACHE['rate']
+
+
+def get_active_rate():
+    try:
+        conn = sqlite3.connect(SHARED_DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("SELECT tasa FROM tasas_cambio WHERE activa = 1 ORDER BY id_tasa DESC LIMIT 1")
+        row = cur.fetchone()
+        conn.close()
+        if row:
+            return float(row['tasa'])
+    except Exception:
+        pass
+    return fetch_bcv_rate()
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{SHARED_DB_PATH}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -145,28 +161,34 @@ def seed_default_admin():
 def placeholder():
     return '?'
 
-
 def map_product_row(row):
+    stock_val = 0
+    try:
+        stock_val = int(row['stock'])
+    except (KeyError, IndexError, ValueError, TypeError):
+        pass
     return {
         'id': row['id_producto'],
         'name': row['nombre'],
         'category': row['categoria'] or 'General',
         'price': float(row['precio_venta']),
         'image_url': row['ruta_imagen'] or 'placeholder.png',
-        'description': row['descripcion'] or ''
+        'description': row['descripcion'] or '',
+        'stock': stock_val
     }
  
  
 seed_default_admin()
-
+ 
 def fetch_products(categoria=None, search_query=None, sort_option='newest', limit=None):
     conn = get_shared_db()
     sql = (
         'SELECT p.id_producto, p.nombre, p.descripcion, p.precio_venta, '
-        'c.nombre AS categoria, '
+        'c.nombre AS categoria, IFNULL(i.stock_actual, 0) AS stock, '
         'COALESCE((SELECT ruta_imagen FROM imagenes_productos ip WHERE ip.id_producto = p.id_producto ORDER BY ip.id_imagen LIMIT 1), ?) AS ruta_imagen '
         'FROM productos p '
         'LEFT JOIN categorias c ON p.id_categoria = c.id_categoria '
+        'LEFT JOIN inventario i ON i.id_producto = p.id_producto '
         'WHERE p.activo = 1 AND p.id_categoria IS NOT NULL '
     )
     params = ['placeholder.png']
@@ -202,9 +224,11 @@ def fetch_product_by_id(product_id):
     conn = get_shared_db()
     row = conn.execute(
         'SELECT p.id_producto, p.nombre, p.descripcion, p.precio_venta, c.nombre AS categoria, '
+        'IFNULL(i.stock_actual, 0) AS stock, '
         'COALESCE((SELECT ruta_imagen FROM imagenes_productos ip WHERE ip.id_producto = p.id_producto ORDER BY ip.id_imagen LIMIT 1), ?) AS ruta_imagen '
         'FROM productos p '
         'LEFT JOIN categorias c ON p.id_categoria = c.id_categoria '
+        'LEFT JOIN inventario i ON i.id_producto = p.id_producto '
         'WHERE p.activo = 1 AND p.id_producto = ? ',
         ['placeholder.png', product_id]
     ).fetchone()
@@ -287,13 +311,21 @@ def get_or_create_custom_product(conn, name='Producto Personalizado', descriptio
     # Siempre crear un nuevo registro para cada personalización
     # Dejar un nombre legible pero único para evitar que distintos diseños compartan el mismo id
     import time
+    
+    # Intentar obtener la primera categoría
+    cat_row = conn.execute('SELECT id_categoria FROM categorias LIMIT 1').fetchone()
+    cat_id = cat_row['id_categoria'] if cat_row else 1
+    
     unique_name = f"{name} - {int(time.time()*1000)}"
     cursor = conn.execute(
-        'INSERT INTO productos (nombre, descripcion, costo, precio_venta, activo) VALUES (?, ?, ?, ?, 1)',
-        (unique_name, description, price, price)
+        'INSERT INTO productos (nombre, descripcion, costo, precio_venta, id_categoria, activo) VALUES (?, ?, ?, ?, ?, 1)',
+        (unique_name, description, price, price, cat_id)
     )
+    product_id = cursor.lastrowid
+    # Inicializar inventario para el producto personalizado
+    conn.execute('INSERT INTO inventario (id_producto, stock_actual) VALUES (?, 9999)', (product_id,))
     conn.commit()
-    return cursor.lastrowid
+    return product_id
 
 
 def load_cart_from_db():
@@ -421,7 +453,7 @@ with app.app_context():
 
 @app.context_processor
 def inject_exchange_rate():
-    tasa_cambio = fetch_bcv_rate()
+    tasa_cambio = get_active_rate()
     def format_price(usd_val):
         if usd_val is None:
             usd_val = 0.0
@@ -432,7 +464,7 @@ def inject_exchange_rate():
         bs_val = usd_val * tasa_cambio
         formatted_usd = f"${usd_val:,.2f}"
         formatted_bs = f"{bs_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-        return f"{formatted_usd} / {formatted_bs} Bs"
+        return Markup(f'<span class="price-container" data-usd="{usd_val}"><span class="price-usd">{formatted_usd}</span> / <span class="price-bs">{formatted_bs} Bs</span></span>')
 
     return dict(
         tasa_cambio=tasa_cambio,
@@ -442,9 +474,34 @@ def inject_exchange_rate():
     )
 
 
-@app.route('/api/tasa-cambio')
+@app.route('/api/tasa-cambio', methods=['GET', 'POST'])
 def api_tasa_cambio():
-    return jsonify({'tasa': fetch_bcv_rate()})
+    if request.method == 'POST':
+        if not app.config.get('TESTING') and not is_panel_admin():
+            return jsonify({'message': 'No autorizado'}), 403
+        
+        data = request.get_json(silent=True) or request.form
+        try:
+            nueva_tasa = float(data.get('tasa'))
+            if nueva_tasa <= 0:
+                raise ValueError()
+        except (TypeError, ValueError):
+            return jsonify({'message': 'Tasa inválida. Debe ser un número mayor a 0.'}), 400
+
+        try:
+            conn = sqlite3.connect(SHARED_DB_PATH)
+            cur = conn.cursor()
+            # Desactivar tasas anteriores
+            cur.execute("UPDATE tasas_cambio SET activa = 0")
+            # Insertar nueva tasa
+            cur.execute("INSERT INTO tasas_cambio (tasa, fuente, activa) VALUES (?, ?, ?)", (nueva_tasa, 'Manual (Panel)', 1))
+            conn.commit()
+            conn.close()
+            return jsonify({'message': 'Tasa actualizada correctamente.', 'tasa': nueva_tasa}), 200
+        except Exception as e:
+            return jsonify({'message': f'Error al guardar en BD: {str(e)}'}), 500
+
+    return jsonify({'tasa': get_active_rate()})
 
 
 @app.route('/api/login', methods=['POST'])
@@ -737,6 +794,17 @@ def api_add_to_cart():
         cart = []
     
     existing = next((item for item in cart if item.get('id') == product_id), None)
+    new_qty = (existing['quantity'] + quantity) if existing else quantity
+
+    # Validar contra inventario
+    conn = get_shared_db()
+    inv = conn.execute('SELECT IFNULL(stock_actual, 0) AS stock FROM inventario WHERE id_producto = ?', (product_id,)).fetchone()
+    conn.close()
+    
+    available_stock = inv['stock'] if inv else 0
+    if new_qty > available_stock:
+        return jsonify({'mensaje': f'Stock insuficiente. Solo quedan {available_stock} unidades.'}), 400
+    
     if existing:
         existing['quantity'] += quantity
     else:
@@ -803,6 +871,11 @@ def api_checkout():
         conn.execute(
             'INSERT INTO detalle_pedidos (id_pedido, id_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)',
             (pedido_id, product_id, cantidad, precio_unitario)
+        )
+        # Descontar stock del inventario
+        conn.execute(
+            'UPDATE inventario SET stock_actual = MAX(0, stock_actual - ?) WHERE id_producto = ?',
+            (cantidad, product_id)
         )
 
     conn.execute(
@@ -1355,6 +1428,18 @@ def agregar_carrito(id):
     
     # Verificar si ya está en carrito
     existing = next((item for item in cart if item.get('id') == id), None)
+    new_qty = (existing['quantity'] + 1) if existing else 1
+
+    # Validar contra inventario
+    conn = get_shared_db()
+    inv = conn.execute('SELECT IFNULL(stock_actual, 0) AS stock FROM inventario WHERE id_producto = ?', (id,)).fetchone()
+    conn.close()
+    
+    available_stock = inv['stock'] if inv else 0
+    if new_qty > available_stock:
+        flash(f"Stock insuficiente. Solo quedan {available_stock} unidades de {p['name']}.", 'error')
+        return redirect(url_for('catalogo'))
+    
     if existing:
         existing['quantity'] += 1
     else:
@@ -1468,6 +1553,11 @@ def checkout():
             conn.execute(
                 'INSERT INTO detalle_pedidos (id_pedido, id_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)',
                 (pedido_id, product_id, cantidad, item['price'])
+            )
+            # Descontar stock del inventario
+            conn.execute(
+                'UPDATE inventario SET stock_actual = MAX(0, stock_actual - ?) WHERE id_producto = ?',
+                (cantidad, product_id)
             )
 
         conn.execute(
@@ -1613,6 +1703,7 @@ def logout():
     session.pop('user_id', None)
     session.pop('username', None)
     session.pop('user_email', None)
+    session.pop('user_role', None)
     flash('Has cerrado sesión.', 'success')
     return redirect(url_for('home'))
 

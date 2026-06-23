@@ -3,8 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard</title>
+<title>Sublime | Panel de Control</title>
 
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+<!-- Icons (FontAwesome) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Main Stylesheet -->
 <link rel="stylesheet" href="styles.css">
 
 <!-- Chart.js -->
@@ -24,37 +33,58 @@
     <!-- SIDEBAR -->
     <aside class="sidebar">
 
-        <h2 class="logo">SUBLIME</h2>
+        <div class="sidebar-brand">
+            <a href="/" class="logo-link">
+                <img src="/static/images/full_logo.png" class="sidebar-logo" alt="Sublime's Logo">
+            </a>
+        </div>
 
-        <ul>
+        <ul class="sidebar-menu">
             <li class="active" data-section="dashboard">
-                <img src="./img/dashboard.png" alt="Dashboard" class="icon-dash"/>Dashboard</li>
+                <i class="fa-solid fa-chart-pie sidebar-icon"></i>
+                <span>Dashboard</span>
+            </li>
             <li data-section="inventory">
-                <img src="./img/inventario.png" alt="Inventario" class="icon-inv"/>Inventario</li>
+                <i class="fa-solid fa-boxes-stacked sidebar-icon"></i>
+                <span>Inventario</span>
+            </li>
             <li data-section="sales">
-                <img src="./img/carrito.png" alt="Ventas" class="icon-sales"/>Ventas</li>
+                <i class="fa-solid fa-cart-shopping sidebar-icon"></i>
+                <span>Ventas</span>
+            </li>
             <li data-section="clients">
-                <img src="./img/clientes.png" alt="Clientes" class="icon-clients"/>Clientes</li>
+                <i class="fa-solid fa-users sidebar-icon"></i>
+                <span>Clientes</span>
+            </li>
             <li data-section="invoices">
-                <img src="./img/facturas.png" alt="Facturas" class="icon-invoices"/>Facturas</li>
+                <i class="fa-solid fa-file-invoice-dollar sidebar-icon"></i>
+                <span>Facturas</span>
+            </li>
             <li data-section="settings">
-                <img src="./img/configuracion.png" alt="Configuración" class="icon-settings"/>Configuración</li>
+                <i class="fa-solid fa-sliders sidebar-icon"></i>
+                <span>Configuración</span>
+            </li>
         </ul>
 
         <div class="sidebar-theme-toggle">
-
-            <span>☀️</span>
+            <i class="fa-solid fa-sun toggle-icon"></i>
             <label class="switch">
                 <input type="checkbox" id="darkModeToggle">
                 <span class="slider"></span>
             </label>
-
-            <span>🌙</span>
+            <i class="fa-solid fa-moon toggle-icon"></i>
         </div>
         
-        <button class="btn secondary logout-btn" id="logoutBtn">
-            Cerrar Sesión
-        </button>
+        <div class="sidebar-footer">
+            <a href="/" class="btn-website">
+                <i class="fa-solid fa-house"></i>
+                <span>Ver Sitio Web</span>
+            </a>
+            <button class="btn-logout" id="logoutBtn">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Cerrar Sesión</span>
+            </button>
+        </div>
 
     </aside>
 

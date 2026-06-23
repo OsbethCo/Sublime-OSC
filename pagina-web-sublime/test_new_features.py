@@ -537,6 +537,38 @@ class TestProfileLinkedAccountsUI(BaseLinkedAccountsTest):
         self.assertIn("mi_fb@facebook.com", html, "El correo de Facebook no aparece en el perfil.")
 
 
+class TestExchangeRateSync(BaseLinkedAccountsTest):
+    """Pruebas para verificar la sincronización de la tasa de cambio."""
+
+    def test_get_tasa_cambio(self):
+        """GET /api/tasa-cambio retorna un valor por defecto."""
+        r = self.client.get("/api/tasa-cambio")
+        self.assertEqual(r.status_code, 200)
+        data = r.get_json()
+        self.assertIn("tasa", data)
+        self.assertGreater(data["tasa"], 0)
+
+    def test_post_tasa_cambio(self):
+        """POST /api/tasa-cambio actualiza la tasa y los GET subsiguientes la retornan."""
+        r = self.client.post("/api/tasa-cambio", json={"tasa": 45.7})
+        self.assertEqual(r.status_code, 200)
+        data = r.get_json()
+        self.assertEqual(data["tasa"], 45.7)
+
+        # Verificar que el GET subsiguiente la retorne
+        r_get = self.client.get("/api/tasa-cambio")
+        self.assertEqual(r_get.status_code, 200)
+        self.assertEqual(r_get.get_json()["tasa"], 45.7)
+
+    def test_post_tasa_cambio_invalida(self):
+        """POST /api/tasa-cambio con valores inválidos retorna 400."""
+        r = self.client.post("/api/tasa-cambio", json={"tasa": -1})
+        self.assertEqual(r.status_code, 400)
+
+        r2 = self.client.post("/api/tasa-cambio", json={"tasa": "abc"})
+        self.assertEqual(r2.status_code, 400)
+
+
 # ---------------------------------------------------------------------------
 # Punto de entrada
 # ---------------------------------------------------------------------------
@@ -554,6 +586,7 @@ if __name__ == "__main__":
         TestLinkingRoutes,
         TestUnlinkRoute,
         TestProfileLinkedAccountsUI,
+        TestExchangeRateSync,
     ]:
         suite.addTests(loader.loadTestsFromTestCase(cls))
 

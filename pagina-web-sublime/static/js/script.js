@@ -1,4 +1,37 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Tasa de cambio global y formateo dinámico
+    window.activeExchangeRate = 40.0;
+
+    window.formatPriceUSD = function(amount) {
+        return '$' + amount.toFixed(2);
+    };
+
+    window.formatPriceBS = function(amount, rate) {
+        const bs = amount * rate;
+        return bs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Bs';
+    };
+
+    function updateAllPricesOnPage(rate) {
+        document.querySelectorAll('.price-container').forEach(container => {
+            const usd = parseFloat(container.getAttribute('data-usd')) || 0;
+            const bsSpan = container.querySelector('.price-bs');
+            if (bsSpan) {
+                bsSpan.textContent = window.formatPriceBS(usd, rate);
+            }
+        });
+    }
+
+    fetch('/api/tasa-cambio')
+        .then(resp => resp.json())
+        .then(data => {
+            if (data.tasa) {
+                window.activeExchangeRate = Number(data.tasa);
+                updateAllPricesOnPage(window.activeExchangeRate);
+                document.dispatchEvent(new CustomEvent('rateLoaded', { detail: window.activeExchangeRate }));
+            }
+        })
+        .catch(err => console.error("Error al obtener la tasa de cambio activa:", err));
+
     // Lógica del menú de hamburguesas
     const burgerMenu = document.getElementById('burger-menu');
     const navLinks = document.querySelector('.nav-links');
@@ -198,9 +231,19 @@ document.addEventListener('DOMContentLoaded', () => {
         function showProductState(product) {
             const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
             
-            // Extract numeric USD price from formatted string like "$15.00 / 600,00 Bs"
-            const priceMatch = product.price.match(/\$?([\d,]+\.?\d*)/);
-            baseUnitPrice = priceMatch ? parseFloat(priceMatch[1].replace(/,/g, '')) : 0;
+            // Try parsing directly as a float first
+            let priceNum = parseFloat(product.price);
+            if (isNaN(priceNum)) {
+                // Extract numeric USD price from formatted string like "$15.00 / 600,00 Bs"
+                const priceMatch = product.price.match(/\$?([\d,]+\.?\d*)/);
+                priceNum = priceMatch ? parseFloat(priceMatch[1].replace(/,/g, '')) : 0;
+            }
+            baseUnitPrice = priceNum;
+
+            const rate = window.activeExchangeRate || 40.0;
+            const usdFormatted = window.formatPriceUSD(baseUnitPrice);
+            const bsFormatted = window.formatPriceBS(baseUnitPrice, rate);
+            const formattedPriceHTML = `<span class="price-container" data-usd="${baseUnitPrice}"><span class="price-usd">${usdFormatted}</span> / <span class="price-bs">${bsFormatted}</span></span>`;
             
             modalBody.innerHTML = `
                 <div class="cart-modal-product">
@@ -209,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <div class="cart-modal-product-info">
                         <p class="cart-modal-product-name">${product.name}</p>
-                        <p class="cart-modal-product-price">${product.price}</p>
+                        <p class="cart-modal-product-price">${formattedPriceHTML}</p>
                     </div>
                 </div>
                 <div class="cart-modal-options">
@@ -230,7 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="cart-modal-subtotal">
                     <span class="cart-modal-subtotal-label">Subtotal</span>
-                    <span class="cart-modal-subtotal-value" id="subtotalValue">${product.price}</span>
+                    <span class="cart-modal-subtotal-value" id="subtotalValue">${formattedPriceHTML}</span>
                 </div>
             `;
         }
@@ -335,9 +378,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (priceText && baseUnitPrice > 0) {
                 const qty = parseInt(qtyInput.value) || 1;
                 const total = baseUnitPrice * qty;
-                // Replace first number in the formatted price
-                const originalPrice = priceText.textContent;
-                priceText.textContent = originalPrice.replace(/[\d,]+\.?\d*/, total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                const rate = window.activeExchangeRate || 40.0;
+                const usdFormatted = window.formatPriceUSD(total);
+                const bsFormatted = window.formatPriceBS(total, rate);
+                priceText.innerHTML = `<span class="price-container" data-usd="${total}"><span class="price-usd">${usdFormatted}</span> / <span class="price-bs">${bsFormatted}</span></span>`;
             }
         });
 
@@ -431,15 +475,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        function formatPriceUSD(amount) {
-            return '$' + amount.toFixed(2);
-        }
-
-        function formatPriceBS(amount, rate) {
-            const bs = amount * rate;
-            return bs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Bs';
-        }
-
         async function refreshDropdown() {
             if (!container || !dropdown) return;
 
@@ -459,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 footer.style.display = 'flex';
-                totalEl.textContent = formatPriceUSD(total) + ' / ' + formatPriceBS(total, rate);
+                totalEl.textContent = window.formatPriceUSD(total) + ' / ' + window.formatPriceBS(total, rate);
 
                 itemsContainer.innerHTML = cart.map(item => {
                     const itemTotal = item.price * (item.quantity || 1);
@@ -472,8 +507,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <p class="cart-dropdown-item-qty">Cant: ${item.quantity || 1}</p>
                             </div>
                             <div class="cart-dropdown-item-prices">
-                                <span class="cart-dropdown-item-price-usd">${formatPriceUSD(itemTotal)}</span>
-                                <span class="cart-dropdown-item-price-bs">${formatPriceBS(itemTotal, rate)}</span>
+                                <span class="cart-dropdown-item-price-usd">${window.formatPriceUSD(itemTotal)}</span>
+                                <span class="cart-dropdown-item-price-bs">${window.formatPriceBS(itemTotal, rate)}</span>
                             </div>
                         </div>
                     `;

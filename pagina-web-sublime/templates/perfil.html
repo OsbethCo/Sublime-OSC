@@ -148,6 +148,15 @@
                 </div>
             </div>
 
+            {% if session.get('user_role') in ('Administrador Panel', 'Administrador') %}
+            <!-- Panel administrativo link -->
+            <div style="margin-top: 10px; margin-bottom: 10px;">
+                <a href="{{ url_for('admin_panel_index') }}" class="btn-primary profile-btn" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; font-weight: 700; background: var(--primary-grad); color: #000; padding: 12px 20px; border-radius: 8px; width: 100%;">
+                    <i class="fa-solid fa-gauge"></i> Panel de Administración
+                </a>
+            </div>
+            {% endif %}
+
             <!-- Cerrar sesión -->
             <div style="margin-top: 10px;">
                 <a href="{{ url_for('logout') }}" class="btn-danger-grad profile-btn" style="display: inline-flex; align-items: center; gap: 8px;">

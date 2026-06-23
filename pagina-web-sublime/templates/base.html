@@ -22,6 +22,9 @@
             <li><a href="{{ url_for('personalizar') }}">Personalizar</a></li>
             <li><a href="javascript:void(0);" id="theme-toggle" title="Cambiar Tema"><i class="fa-solid fa-moon fa-lg"></i></a></li>
             {% if session.get('user_id') %}
+                {% if session.get('user_role') in ('Administrador Panel', 'Administrador') %}
+                    <li><a href="{{ url_for('admin_panel_index') }}" style="color: #00ff80; font-weight: 700;"><i class="fa-solid fa-gauge"></i> Admin</a></li>
+                {% endif %}
                 <li><a href="{{ url_for('mis_pedidos') }}">Mis Pedidos</a></li>
                 <li><a href="{{ url_for('perfil') }}" style="display: flex; align-items: center; gap: 8px;"><i class="fa-solid fa-circle-user fa-lg"></i> <span style="text-transform: none;">{{ session.get('username') }}</span></a></li>
             {% else %}

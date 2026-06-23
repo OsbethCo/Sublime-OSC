@@ -43,7 +43,9 @@
 <div class="products-grid reveal" style="margin-top: 1rem;">
     {% for p in productos %}
     <div class="product-card">
-        {% if loop.index == 1 and not request.args.get('q') %}
+        {% if p.stock <= 0 %}
+        <div class="badge" style="background: #ff3c3c; color: white; font-weight: 700; box-shadow: 0 4px 10px rgba(255, 60, 60, 0.3);">Agotado</div>
+        {% elif loop.index == 1 and not request.args.get('q') %}
         <div class="badge">Novedad</div>
         {% endif %}
         <div class="product-image">
@@ -55,14 +57,20 @@
             <p class="price">{{ format_price(p.price) }}</p>
             <div class="card-actions">
                 <a href="{{ url_for('producto', id=p.id) }}" class="btn-outline">Ver</a>
+                {% if p.stock > 0 %}
                 <button type="button" 
                         class="btn-secondary btn-add-to-cart"
                         data-product-id="{{ p.id }}"
                         data-product-name="{{ p.name }}"
-                        data-product-price="{{ format_price(p.price) }}"
+                        data-product-price="{{ p.price }}"
                         data-product-image="{{ url_for('static', filename='images/' + p.image_url) }}">
                     Añadir
                 </button>
+                {% else %}
+                <button type="button" class="btn-secondary" disabled style="opacity: 0.5; cursor: not-allowed; background: var(--border-color); color: var(--text-muted); border-color: transparent;">
+                    Agotado
+                </button>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -131,23 +131,35 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = cb.closest('.cart-item-card');
             const index = parseInt(card.dataset.index);
             indices.push(index);
-            const priceText = card.querySelector('.cart-item-unit-price').textContent;
+            
+            const container = card.querySelector('.price-container');
+            let unitPrice = 0;
+            if (container && container.hasAttribute('data-usd')) {
+                unitPrice = parseFloat(container.getAttribute('data-usd')) || 0;
+            } else {
+                const priceText = card.querySelector('.cart-item-unit-price').textContent;
+                const match = priceText.match(/\$?([\d,]+\.?\d*)/);
+                if (match) {
+                    unitPrice = parseFloat(match[1].replace(/,/g, '')) || 0;
+                }
+            }
+
             const qtyEl = card.querySelector('.cart-item-attr');
             let qty = 1;
             if (qtyEl && qtyEl.textContent.includes('Cantidad:')) {
                 qty = parseInt(qtyEl.textContent.replace('Cantidad:', '').trim()) || 1;
             }
-            // Extract USD price
-            const match = priceText.match(/\$?([\d,]+\.?\d*)/);
-            if (match) {
-                subtotal += parseFloat(match[1].replace(/,/g, '')) * qty;
-            }
+            subtotal += unitPrice * qty;
         });
 
-        // Format like the server does
-        const formatted = '$' + subtotal.toFixed(2);
-        selectedSubtotal.textContent = formatted;
-        selectedTotal.textContent = formatted;
+        // Format with both currencies
+        const rate = window.activeExchangeRate || 40.0;
+        const usdFormatted = window.formatPriceUSD ? window.formatPriceUSD(subtotal) : ('$' + subtotal.toFixed(2));
+        const bsFormatted = window.formatPriceBS ? window.formatPriceBS(subtotal, rate) : ((subtotal * rate).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Bs');
+        
+        const summaryHTML = `<span class="price-container" data-usd="${subtotal}"><span class="price-usd">${usdFormatted}</span> / <span class="price-bs">${bsFormatted}</span></span>`;
+        selectedSubtotal.innerHTML = summaryHTML;
+        selectedTotal.innerHTML = summaryHTML;
 
         checkoutBtn.disabled = count === 0;
         checkoutBtn.style.opacity = count === 0 ? '0.5' : '1';

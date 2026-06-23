@@ -1722,28 +1722,53 @@ let usdRate = Number(localStorage.getItem('usdRate')) || 36.5;
 const usdInput = document.getElementById('usdRate');
 const saveUsdBtn = document.getElementById('saveUsdRate');
  
-/* cargar valor en input */
+/* cargar valor en input y sincronizar con servidor */
 if (usdInput) {
     usdInput.value = usdRate;
+    
+    apiRequest('tasa-cambio')
+        .then(data => {
+            if (data.tasa) {
+                usdRate = Number(data.tasa);
+                localStorage.setItem('usdRate', usdRate);
+                usdInput.value = usdRate;
+            }
+        })
+        .catch(err => {
+            console.error('Error al sincronizar tasa de cambio con servidor:', err);
+        });
 }
  
 /* guardar tasa */
 if (saveUsdBtn) {
  
-    saveUsdBtn.addEventListener('click', () => {
+    saveUsdBtn.addEventListener('click', async () => {
  
-        usdRate = Number(usdInput.value);
+        const nuevaTasa = Number(usdInput.value);
  
-        if (!usdRate || usdRate <= 0) {
+        if (!nuevaTasa || nuevaTasa <= 0) {
             showToast('Ingresa una tasa válida', 'error');
             return;
         }
  
-        localStorage.setItem('usdRate', usdRate);
+        try {
+            await apiRequest('tasa-cambio', {
+                method: 'POST',
+                body: { tasa: nuevaTasa }
+            });
  
-        showToast('Tasa actualizada correctamente', 'success');
+            usdRate = nuevaTasa;
+            localStorage.setItem('usdRate', usdRate);
  
-        location.reload(); // recarga para aplicar cambios
+            showToast('Tasa actualizada correctamente', 'success');
+ 
+            setTimeout(() => {
+                location.reload();
+            }, 800);
+ 
+        } catch (error) {
+            showToast('Error al actualizar la tasa: ' + error.message, 'error');
+        }
  
     });
  
@@ -2138,6 +2163,13 @@ window.addEventListener('DOMContentLoaded', () => {
             if (priceIvaEl) {
                 priceIvaEl.textContent = `Con IVA (${iva}%): ${formatCurrency(finalPrice)}`;
             }
+        });
+    }
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            window.location.href = '/logout';
         });
     }
 });

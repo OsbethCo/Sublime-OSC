@@ -14,19 +14,34 @@
         <div class="category-tag">{{ producto.category }}</div>
         <p class="accent-text" style="font-size: 2.5rem; margin: 25px 0;">{{ format_price(producto.price) }}</p>
         
-        <p style="color: var(--text-muted); margin-bottom: 40px; line-height: 1.8; font-size: 1.1rem;">
+        <p style="color: var(--text-muted); margin-bottom: 30px; line-height: 1.8; font-size: 1.1rem;">
             Impresión por sublimación de alta resolución. Colores que vibran con energía y no se desvanecen. Utilizamos materiales premium seleccionados para garantizar que tu diseño dure tanto como tus recuerdos.
         </p>
         
+        {% if producto.stock > 0 %}
         <button type="button" 
                 class="btn-primary btn-add-to-cart" 
                 data-product-id="{{ producto.id }}"
                 data-product-name="{{ producto.name }}"
-                data-product-price="{{ format_price(producto.price) }}"
+                data-product-price="{{ producto.price }}"
                 data-product-image="{{ url_for('static', filename='images/' + producto.image_url) }}"
                 style="width: 100%; text-align: center; padding: 20px; font-size: 1.2rem;">
             AÑADIR AL CARRITO
         </button>
+        <p style="color: #00ff80; font-weight: bold; margin-top: 15px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-circle-check"></i> En existencia: {{ producto.stock }} unidades
+        </p>
+        {% else %}
+        <button type="button" 
+                class="btn-primary" 
+                disabled
+                style="width: 100%; text-align: center; padding: 20px; font-size: 1.2rem; opacity: 0.5; cursor: not-allowed; background: #555; box-shadow: none;">
+            AGOTADO
+        </button>
+        <p style="color: #ff4d4d; font-weight: bold; margin-top: 15px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-circle-xmark"></i> Sin stock disponible
+        </p>
+        {% endif %}
     </div>
 </div>
 
