@@ -81,7 +81,7 @@
                         </select>
                     </div>
                     <div class="form-group" style="margin-bottom: 12px;">
-                        <label style="display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.85rem;">Dirección de la Agencia:</label>
+                        <label id="dirLabel" style="display: block; margin-bottom: 8px; font-weight: 700; font-size: 0.85rem;">Dirección de la Agencia:</label>
                         <input type="text" name="codigo_agencia" id="codigoAgencia" placeholder="Ej: Agencia Caja de Agua (Calle Manuelita Sáenz, Sector Caja de Agua)" style="width: 100%; padding: 12px; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 8px; font-size: 0.9rem;">
                     </div>
                     <div style="display: flex; gap: 12px;">
@@ -309,15 +309,22 @@ function togglePaymentDetails(method) {
         document.querySelectorAll('.shipping-card').forEach(c => c.style.borderColor = 'var(--border-color)');
         this.closest('.shipping-card').style.borderColor = '#00b350';
         const val = this.value;
+        const dirLabel = document.getElementById('dirLabel');
+        const dirField = document.getElementById('codigoAgencia');
         agencyGroup.style.display = (val === 'destino' || val === 'agencia') ? 'block' : 'none';
         storeInfo.style.display = val === 'tienda' ? 'block' : 'none';
-        // Reset placeholder when switching
-        if (val === 'agencia' && shippingSelect.value) {
-            shippingSelect.dispatchEvent(new Event('change'));
-        } else if (val === 'destino' && shippingSelect.value) {
-            shippingSelect.dispatchEvent(new Event('change'));
-        } else {
-            codigoAgencia.placeholder = 'Escribe la dirección de la agencia...';
+        if (val === 'destino') {
+            dirLabel.textContent = 'Dirección de tu casa:';
+            dirField.placeholder = 'Ej: Calle Principal, Casa #10, Sector Centro';
+            dirField.value = '';
+        } else if (val === 'agencia') {
+            dirLabel.textContent = 'Dirección de la Agencia:';
+            if (!shippingSelect.value) {
+                dirField.placeholder = 'Escribe la dirección de la agencia...';
+            } else {
+                shippingSelect.dispatchEvent(new Event('change'));
+            }
+            dirField.value = '';
         }
         if (val === 'tienda') {
             shippingSelect.value = '';
