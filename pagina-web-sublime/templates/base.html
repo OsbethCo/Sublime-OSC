@@ -97,13 +97,7 @@
                 <p><a href="{{ url_for('terminos') }}">Términos y Condiciones</a></p>
                 <p><a href="{{ url_for('privacidad') }}">Política de Privacidad</a></p>
             </div>
-            <div>
-                <h3>Boletín</h3>
-                <form action="{{ url_for('newsletter') }}" method="POST" style="display: flex; flex-direction: column; gap: 10px;">
-                    <input type="email" name="email" placeholder="Correo electrónico" class="newsletter-input" required style="width: 100%;">
-                    <button type="submit" class="newsletter-btn" style="width: 100%;">SUSCRIBIRSE</button>
-                </form>
-            </div>
+
         </div>
         <div class="copyright">
             <p>&copy; 2026 Página Sublime. Todos los derechos reservados.</p>
