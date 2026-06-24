@@ -2407,3 +2407,8 @@ function deleteClientCard(btn){
         'error'
     );
 }
+
+// ── Logout ──
+document.getElementById('logoutBtn').addEventListener('click', () => {
+    window.location.href = '/logout';
+});
