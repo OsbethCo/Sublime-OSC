@@ -1607,10 +1607,10 @@ SMTP_HOST = os.environ.get('SMTP_HOST', '')
 SMTP_PORT = int(os.environ.get('SMTP_PORT', '587'))
 SMTP_USER = os.environ.get('SMTP_USER', '')
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
-MAIL_FROM = os.environ.get('MAIL_FROM', 'noreply@sublime.com')
+MAIL_FROM = os.environ.get('MAIL_FROM', '') or SMTP_USER
 
 def send_reset_email(to_email, token):
-    if not SMTP_HOST or not SMTP_USER:
+    if not SMTP_HOST or not SMTP_USER or not MAIL_FROM:
         return False
     reset_url = url_for('reset_password', token=token, _external=True)
     msg = MIMEText(f'''Hola,
