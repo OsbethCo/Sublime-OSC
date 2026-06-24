@@ -1630,7 +1630,7 @@ Si no solicitaste este cambio, ignora este mensaje.
     msg['From'] = MAIL_FROM
     msg['To'] = to_email
     try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
             server.starttls()
             server.login(SMTP_USER, SMTP_PASSWORD)
             server.send_message(msg)
@@ -2146,19 +2146,21 @@ def olvide():
         user = conn.execute('SELECT id_usuario, correo FROM usuarios WHERE correo = ? LIMIT 1', (email,)).fetchone()
         conn.close()
         if user:
-            token = secrets.token_urlsafe(48)
-            expires_at = (datetime.utcnow() + timedelta(hours=1)).isoformat()
-            conn = get_shared_db()
-            conn.execute('INSERT INTO password_resets (id_usuario, token, expires_at) VALUES (?, ?, ?)',
-                         (user['id_usuario'], token, expires_at))
-            conn.commit()
-            conn.close()
-            sent = send_reset_email(user['correo'], token)
-            if not sent:
-                reset_url = url_for('reset_password', token=token, _external=True)
-                app.logger.warning(f'SMTP not configured. Reset link: {reset_url}')
-                flash(f'Modo desarrollo — enlace de recuperación: {reset_url}', 'info')
-                return render_template('olvide.html', debug_url=reset_url)
+            try:
+                token = secrets.token_urlsafe(48)
+                expires_at = (datetime.utcnow() + timedelta(hours=1)).isoformat()
+                conn = get_shared_db()
+                conn.execute('INSERT INTO password_resets (id_usuario, token, expires_at) VALUES (?, ?, ?)',
+                             (user['id_usuario'], token, expires_at))
+                conn.commit()
+                conn.close()
+                sent = send_reset_email(user['correo'], token)
+                if not sent:
+                    reset_url = url_for('reset_password', token=token, _external=True)
+                    app.logger.warning(f'SMTP not configured. Reset link: {reset_url}')
+                    return render_template('olvide.html', debug_url=reset_url)
+            except Exception as e:
+                app.logger.error(f'Error en olvide: {e}')
         flash('Si el correo está registrado, recibirás un enlace de recuperación.', 'success')
         return redirect(url_for('login'))
     return render_template('olvide.html')
