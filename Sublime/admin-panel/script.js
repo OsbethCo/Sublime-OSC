@@ -636,7 +636,7 @@ async function loadOrders() {
                                 ${order.numero_guia ? ' | Guia: ' + order.numero_guia : ''}
                             </p>
                             <p style="font-size:0.85rem;color:var(--text-muted);">
-                                Total: $${parseFloat(order.total).toFixed(2)} (Bs ${(parseFloat(order.total) * (window.usdRate || 40)).toFixed(2)}) | Fecha: ${order.fecha || 'N/A'}
+                                Total: $${Number(order.total || 0).toFixed(2)} (Bs ${(Number(order.total || 0) * (window.usdRate || 40)).toFixed(2)}) | Fecha: ${order.fecha || 'N/A'}
                             </p>
                         </div>
                         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
@@ -1829,6 +1829,7 @@ function loadRatesFromBackend() {
         .then(data => {
             if (data.usd && data.usd > 0) {
                 usdRate = data.usd;
+                window.usdRate = usdRate;
                 eurRate = data.eur || 0;
                 if (usdInput) usdInput.value = usdRate;
                 if (eurInput) eurInput.value = eurRate;
@@ -1850,6 +1851,7 @@ if (fetchBcvBtn) {
             .then(data => {
                 if (data.usd && data.usd > 0) {
                     usdRate = data.usd;
+                    window.usdRate = usdRate;
                     eurRate = data.eur || 0;
                     if (usdInput) usdInput.value = usdRate.toFixed(4);
                     if (eurInput) eurInput.value = eurRate.toFixed(4);
@@ -1889,6 +1891,7 @@ if (saveBtn) {
             if (data.mensaje) {
                 showToast('Tasas guardadas correctamente', 'success');
                 usdRate = data.usd;
+                window.usdRate = usdRate;
                 eurRate = data.eur;
             }
         })
