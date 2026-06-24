@@ -84,13 +84,38 @@ def exchange_facebook_code(code):
         return json.loads(resp2.read().decode())
 
 # Cache para la tasa BCV
-BCV_RATE_CACHE = {'rate': 40.0, 'updated': 0}
+BCV_CACHE = {'usd': 40.0, 'eur': 45.0, 'updated': 0}
 CACHE_TTL = 3600  # 1 hora
 
-def fetch_bcv_rate():
+def get_config_rate():
+    try:
+        conn = sqlite3.connect(SHARED_DB_PATH)
+        conn.row_factory = sqlite3.Row
+        row = conn.execute('SELECT tasa_usd, tasa_eur FROM configuracion LIMIT 1').fetchone()
+        conn.close()
+        if row and row['tasa_usd'] and float(row['tasa_usd']) > 0:
+            return float(row['tasa_usd']), float(row['tasa_eur'] or 0) if row['tasa_eur'] else 0
+    except Exception:
+        pass
+    return None, None
+
+def save_config_rate(usd, eur):
+    try:
+        conn = sqlite3.connect(SHARED_DB_PATH)
+        existing = conn.execute('SELECT id_configuracion FROM configuracion LIMIT 1').fetchone()
+        if existing:
+            conn.execute('UPDATE configuracion SET tasa_usd = ?, tasa_eur = ? WHERE id_configuracion = ?', (usd, eur, existing[0]))
+        else:
+            conn.execute('INSERT INTO configuracion (tasa_usd, tasa_eur) VALUES (?, ?)', (usd, eur))
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+def fetch_bcv_rates(force=False):
     now = time.time()
-    if now - BCV_RATE_CACHE['updated'] < CACHE_TTL:
-        return BCV_RATE_CACHE['rate']
+    if not force and now - BCV_CACHE['updated'] < CACHE_TTL:
+        return BCV_CACHE['usd'], BCV_CACHE['eur']
     try:
         req = urllib.request.Request(
             'https://rates.dolarvzla.com/bcv/current.json',
@@ -98,13 +123,27 @@ def fetch_bcv_rate():
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
             data = json.loads(resp.read().decode())
-            rate = float(data['current']['usd'])
-            if rate > 0:
-                BCV_RATE_CACHE['rate'] = rate
-                BCV_RATE_CACHE['updated'] = now
+            usd = float(data['current']['usd'])
+            eur = float(data['current']['eur'])
+            if usd > 0 and eur > 0:
+                BCV_CACHE['usd'] = usd
+                BCV_CACHE['eur'] = eur
+                BCV_CACHE['updated'] = now
+                save_config_rate(usd, eur)
     except Exception:
         pass
-    return BCV_RATE_CACHE['rate']
+    return BCV_CACHE['usd'], BCV_CACHE['eur']
+
+def get_active_rate():
+    usd_db, eur_db = get_config_rate()
+    if usd_db and usd_db > 0:
+        return usd_db, eur_db, 'manual'
+    usd_bcv, eur_bcv = fetch_bcv_rates()
+    return usd_bcv, eur_bcv, 'bcv'
+
+def fetch_bcv_rate():
+    usd, _, _ = get_active_rate()
+    return usd
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{SHARED_DB_PATH}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -447,7 +486,7 @@ with app.app_context():
 
 @app.context_processor
 def inject_exchange_rate():
-    tasa_cambio = fetch_bcv_rate()
+    tasa_usd, tasa_eur, fuente = get_active_rate()
     def format_price(usd_val):
         if usd_val is None:
             usd_val = 0.0
@@ -455,22 +494,37 @@ def inject_exchange_rate():
             usd_val = float(usd_val)
         except ValueError:
             usd_val = 0.0
-        bs_val = usd_val * tasa_cambio
+        bs_val = usd_val * tasa_usd
         formatted_usd = f"${usd_val:,.2f}"
         formatted_bs = f"{bs_val:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
         return f"{formatted_usd} / {formatted_bs} Bs"
 
     return dict(
-        tasa_cambio=tasa_cambio,
+        tasa_cambio=tasa_usd,
         format_price=format_price,
         cart_count=get_cart_count(),
         current_username=session.get('username')
     )
 
 
-@app.route('/api/tasa-cambio')
+@app.route('/api/tasa-cambio', methods=['GET', 'POST'])
 def api_tasa_cambio():
-    return jsonify({'tasa': fetch_bcv_rate()})
+    if request.method == 'POST':
+        data = request.get_json(silent=True) or {}
+        usd = data.get('usd')
+        eur = data.get('eur')
+        if not usd or float(usd) <= 0:
+            return jsonify({'mensaje': 'Tasa USD inválida'}), 400
+        save_config_rate(float(usd), float(eur or 0))
+        return jsonify({'mensaje': 'Tasa guardada correctamente', 'usd': float(usd), 'eur': float(eur or 0)})
+    tasa_usd, tasa_eur, fuente = get_active_rate()
+    return jsonify({'tasa': tasa_usd, 'usd': tasa_usd, 'eur': tasa_eur, 'fuente': fuente})
+
+
+@app.route('/api/tasa-cambio/bcv')
+def api_tasa_cambio_bcv():
+    usd, eur = fetch_bcv_rates(force=True)
+    return jsonify({'usd': usd, 'eur': eur, 'fuente': 'bcv', 'fecha': time.strftime('%Y-%m-%d %H:%M:%S')})
 
 
 @app.route('/api/login', methods=['POST'])
@@ -1308,6 +1362,18 @@ except Exception:
 try:
     conn = get_shared_db()
     conn.execute('ALTER TABLE envios ADD COLUMN tipo_envio VARCHAR(50)')
+    conn.commit()
+except Exception:
+    pass
+try:
+    conn = get_shared_db()
+    conn.execute('ALTER TABLE configuracion ADD COLUMN tasa_eur DECIMAL(12,4)')
+    conn.commit()
+except Exception:
+    pass
+try:
+    conn = get_shared_db()
+    conn.execute('ALTER TABLE configuracion ADD COLUMN tasa_usd DECIMAL(12,4)')
     conn.commit()
 except Exception:
     pass

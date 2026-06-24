@@ -1599,36 +1599,89 @@ if (clientForm) {
    TASA DÓLAR (BS)
 ========================= */
 
-let usdRate = Number(localStorage.getItem('usdRate')) || 36.5;
+let usdRate = 40.0;
+let eurRate = 45.0;
 
 const usdInput = document.getElementById('usdRate');
-const saveUsdBtn = document.getElementById('saveUsdRate');
+const eurInput = document.getElementById('eurRate');
+const saveBtn = document.getElementById('saveUsdRate');
+const fetchBcvBtn = document.getElementById('fetchBcvRate');
+const bcvInfo = document.getElementById('bcvInfo');
+const bcvUsdDisplay = document.getElementById('bcvUsdDisplay');
+const bcvEurDisplay = document.getElementById('bcvEurDisplay');
+const bcvDate = document.getElementById('bcvDate');
 
-/* cargar valor en input */
-if (usdInput) {
-    usdInput.value = usdRate;
+function loadRatesFromBackend() {
+    fetch('/api/tasa-cambio')
+        .then(r => r.json())
+        .then(data => {
+            if (data.usd && data.usd > 0) {
+                usdRate = data.usd;
+                eurRate = data.eur || 0;
+                if (usdInput) usdInput.value = usdRate;
+                if (eurInput) eurInput.value = eurRate;
+            }
+        })
+        .catch(() => {});
+}
+
+if (usdInput || eurInput) {
+    loadRatesFromBackend();
+}
+
+if (fetchBcvBtn) {
+    fetchBcvBtn.addEventListener('click', () => {
+        fetchBcvBtn.disabled = true;
+        fetchBcvBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Obteniendo...';
+        fetch('/api/tasa-cambio/bcv')
+            .then(r => r.json())
+            .then(data => {
+                if (data.usd && data.usd > 0) {
+                    usdRate = data.usd;
+                    eurRate = data.eur || 0;
+                    if (usdInput) usdInput.value = usdRate.toFixed(4);
+                    if (eurInput) eurInput.value = eurRate.toFixed(4);
+                    if (bcvInfo) {
+                        bcvInfo.style.display = 'block';
+                        bcvUsdDisplay.textContent = 'USD ' + usdRate.toFixed(4) + ' Bs';
+                        bcvEurDisplay.textContent = 'EUR ' + eurRate.toFixed(4) + ' Bs';
+                        bcvDate.textContent = data.fecha || '';
+                    }
+                    showToast('Tasas BCV obtenidas', 'success');
+                }
+            })
+            .catch(() => showToast('Error al obtener tasas del BCV', 'error'))
+            .finally(() => {
+                fetchBcvBtn.disabled = false;
+                fetchBcvBtn.innerHTML = '<i class="fas fa-cloud-download-alt"></i> Obtener tasa del BCV';
+            });
+    });
 }
 
 /* guardar tasa */
-if (saveUsdBtn) {
-
-    saveUsdBtn.addEventListener('click', () => {
-
-        usdRate = Number(usdInput.value);
-
-        if (!usdRate || usdRate <= 0) {
-            showToast('Ingresa una tasa válida', 'error');
+if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+        const usd = Number(usdInput ? usdInput.value : 0);
+        const eur = Number(eurInput ? eurInput.value : 0);
+        if (!usd || usd <= 0) {
+            showToast('Ingresa una tasa USD válida', 'error');
             return;
         }
-
-        localStorage.setItem('usdRate', usdRate);
-
-        showToast('Tasa actualizada correctamente', 'success');
-
-        location.reload(); // recarga para aplicar cambios
-
+        fetch('/api/tasa-cambio', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({usd, eur})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.mensaje) {
+                showToast('Tasas guardadas correctamente', 'success');
+                usdRate = data.usd;
+                eurRate = data.eur;
+            }
+        })
+        .catch(() => showToast('Error al guardar tasas', 'error'));
     });
-
 }
 
 const ivaRateInput = 

@@ -652,7 +652,8 @@ CREATE TABLE IF NOT EXISTS configuracion (
 
     moneda_principal VARCHAR(10) DEFAULT 'USD',
 
-    tasa_actual DECIMAL(12,4)
+    tasa_usd DECIMAL(12,4),
+    tasa_eur DECIMAL(12,4)
 );
 
 -- =========================================================
