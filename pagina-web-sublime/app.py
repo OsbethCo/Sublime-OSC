@@ -1608,6 +1608,7 @@ SMTP_PORT = int(os.environ.get('SMTP_PORT', '587'))
 SMTP_USER = os.environ.get('SMTP_USER', '')
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
 MAIL_FROM = os.environ.get('MAIL_FROM', '') or SMTP_USER
+SMTP_USE_SSL = os.environ.get('SMTP_USE_SSL', '0') == '1'
 
 def send_reset_email(to_email, token):
     if not SMTP_HOST or not SMTP_USER or not MAIL_FROM:
@@ -1630,10 +1631,15 @@ Si no solicitaste este cambio, ignora este mensaje.
     msg['From'] = MAIL_FROM
     msg['To'] = to_email
     try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.send_message(msg)
+        if SMTP_USE_SSL:
+            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+                server.login(SMTP_USER, SMTP_PASSWORD)
+                server.send_message(msg)
+        else:
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+                server.starttls()
+                server.login(SMTP_USER, SMTP_PASSWORD)
+                server.send_message(msg)
         return True
     except Exception as e:
         app.logger.error(f'Error enviando email a {to_email}: {e}')
