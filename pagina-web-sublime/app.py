@@ -5,10 +5,43 @@ import uuid
 import sqlite3
 import urllib.request
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, send_from_directory
+from werkzeug.security import generate_password_hash, check_password_hash
+from urllib.parse import urlparse, urljoin
+from functools import wraps
+from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from models import db, User, Product, Order
 
 app = Flask(__name__)
-app.secret_key = 'super_secret_key_for_sublime'
+CORS(app)
+limiter = Limiter(get_remote_address, app=app, default_limits=["200 per day", "50 per hour"], storage_uri="memory://")
+app.secret_key = os.environ.get('SECRET_KEY', 'super_secret_key_for_sublime')
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+if os.environ.get('ENFORCE_HTTPS', '').lower() in ('1', 'true', 'yes'):
+    app.config['SESSION_COOKIE_SECURE'] = True
+
+def is_safe_url(target):
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc
+
+ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+MAX_IMAGE_SIZE = 5 * 1024 * 1024
+
+def validate_image_file(file_storage):
+    if not file_storage or not file_storage.filename:
+        return False
+    ext = file_storage.filename.rsplit('.', 1)[-1].lower() if '.' in file_storage.filename else ''
+    if ext not in ALLOWED_IMAGE_EXTENSIONS:
+        return False
+    file_storage.seek(0, os.SEEK_END)
+    size = file_storage.tell()
+    file_storage.seek(0)
+    if size > MAX_IMAGE_SIZE:
+        return False
+    return True
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 _default_db = os.path.abspath(os.path.join(BASE_DIR, '..', 'Sublime', 'BD', 'database.db'))
 SHARED_DB_PATH = os.environ.get('DATABASE_PATH', _default_db)
@@ -214,6 +247,14 @@ def require_panel_admin():
         return False
     return True
 
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not require_panel_admin():
+            return jsonify({'message': 'Acceso no autorizado.'}), 401
+        return f(*args, **kwargs)
+    return decorated
+
 
 def seed_default_admin():
     ensure_shared_db()
@@ -230,7 +271,7 @@ def seed_default_admin():
         if not panel_admin:
             conn.execute(
                 'INSERT INTO usuarios (nombre, correo, contraseña, id_rol) VALUES (?, ?, ?, ?)',
-                ('Administrador Panel', 'admin@sublime.com', 'admin123', 1)
+                ('Administrador Panel', 'admin@sublime.com', generate_password_hash('admin123'), 1)
             )
             conn.commit()
         elif panel_admin['id_rol'] != 1:
@@ -241,7 +282,7 @@ def seed_default_admin():
         if not web_admin:
             conn.execute(
                 'INSERT INTO usuarios (nombre, correo, contraseña, id_rol) VALUES (?, ?, ?, ?)',
-                ('Administrador Web', 'admin_web@sublime.com', 'adminweb123', 3)
+                ('Administrador Web', 'admin_web@sublime.com', generate_password_hash('adminweb123'), 3)
             )
             conn.commit()
         elif web_admin['id_rol'] != 3:
@@ -548,6 +589,8 @@ def inject_exchange_rate():
 @app.route('/api/tasa-cambio', methods=['GET', 'POST'])
 def api_tasa_cambio():
     if request.method == 'POST':
+        if not require_panel_admin():
+            return jsonify({'mensaje': 'Acceso no autorizado.'}), 401
         data = request.get_json(silent=True) or {}
         usd = data.get('usd')
         eur = data.get('eur')
@@ -567,6 +610,8 @@ def api_tasa_cambio_bcv():
 @app.route('/api/config/iva', methods=['GET', 'POST'])
 def api_config_iva():
     if request.method == 'POST':
+        if not require_panel_admin():
+            return jsonify({'mensaje': 'Acceso no autorizado.'}), 401
         data = request.get_json()
         rate = data.get('iva', 16.0)
         save_config_iva(float(rate))
@@ -577,6 +622,7 @@ def api_config_iva():
 
 
 @app.route('/api/login', methods=['POST'])
+@limiter.limit("10 per minute")
 def api_login():
     data = request.get_json(silent=True) or {}
     usuario = data.get('usuario', '').strip()
@@ -594,9 +640,10 @@ def api_login():
     ).fetchone()
     conn.close()
 
-    if not user or user['contraseña'] != contrasena:
-        return jsonify({'mensaje': 'Usuario o contraseña incorrectos.'}), 401
+    if not user or not check_password_hash(user['contraseña'], contrasena):
+        return jsonify({'mensaje': 'Credenciales inválidas.'}), 401
 
+    session.clear()
     session['user_id'] = user['id_usuario']
     session['username'] = user['nombre']
     session['user_email'] = user['correo']
@@ -758,6 +805,7 @@ def api_order_detail(order_id):
 
 
 @app.route('/api/register', methods=['POST'])
+@limiter.limit("5 per minute")
 def api_register():
     data = request.get_json(silent=True) or {}
     username = data.get('username', '').strip()
@@ -780,7 +828,7 @@ def api_register():
     role_id = role['id_rol'] if role else 2
     conn.execute(
         'INSERT INTO usuarios (nombre, correo, contraseña, id_rol) VALUES (?, ?, ?, ?)',
-        (username, email, password, role_id)
+        (username, email, generate_password_hash(password), role_id)
     )
     conn.commit()
     conn.close()
@@ -996,6 +1044,7 @@ def api_checkout():
 
 # ADMIN PANEL - CARRITO POR CLIENTE
 @app.route('/api/admin/cart/<int:cliente_id>', methods=['GET'])
+@admin_required
 def admin_get_cart(cliente_id):
     conn = get_shared_db()
     carrito_id = get_or_create_cart(conn, cliente_id)
@@ -1017,6 +1066,7 @@ def admin_get_cart(cliente_id):
 
 
 @app.route('/api/admin/cart/<int:cliente_id>', methods=['POST'])
+@admin_required
 def admin_save_cart(cliente_id):
     data = request.get_json() or {}
     items = data.get('items', [])
@@ -1034,6 +1084,7 @@ def admin_save_cart(cliente_id):
 
 
 @app.route('/api/admin/invoice/create', methods=['POST'])
+@admin_required
 def admin_create_invoice():
     data = request.get_json() or {}
     cliente_id = data.get('cliente_id')
@@ -1102,6 +1153,7 @@ def login_index_html():
     return redirect(url_for('login', next=next_url))
 
 @app.route('/api/dashboard', methods=['GET'])
+@admin_required
 def api_dashboard():
     conn = get_shared_db()
     stats = {}
@@ -1138,6 +1190,7 @@ def api_dashboard():
     })
 
 @app.route('/api/inventory', methods=['GET'])
+@admin_required
 def api_inventory():
     conn = get_shared_db()
     inventory = conn.execute(
@@ -1151,6 +1204,7 @@ def api_inventory():
     return jsonify({'inventory': [dict(row) for row in inventory]})
 
 @app.route('/api/clients', methods=['GET'])
+@admin_required
 def api_clients():
     conn = get_shared_db()
     clients = conn.execute(
@@ -1160,6 +1214,7 @@ def api_clients():
     return jsonify({'clients': [dict(row) for row in clients]})
 
 @app.route('/api/invoices', methods=['GET'])
+@admin_required
 def api_invoices():
     conn = get_shared_db()
     invoices = conn.execute(
@@ -1172,6 +1227,7 @@ def api_invoices():
     return jsonify({'invoices': [dict(row) for row in invoices]})
 
 @app.route('/api/invoice/<int:invoice_id>', methods=['GET'])
+@admin_required
 def api_invoice_detail(invoice_id):
     conn = get_shared_db()
     venta = conn.execute(
@@ -1212,6 +1268,7 @@ def api_invoice_detail(invoice_id):
 
 
 @app.route('/api/report', methods=['POST'])
+@admin_required
 def api_report():
     data = request.get_json() or {}
     date_from = data.get('date_from', '')
@@ -1243,6 +1300,7 @@ def api_report():
 
 
 @app.route('/api/sales-data', methods=['GET'])
+@admin_required
 def api_sales_data():
     conn = get_shared_db()
     products = conn.execute(
@@ -1257,6 +1315,7 @@ def api_sales_data():
     return jsonify({'products': [dict(row) for row in products], 'clients': [dict(row) for row in clients]})
 
 @app.route('/api/product', methods=['POST'])
+@admin_required
 def api_create_product():
     nombre = request.form.get('nombre')
     categoria = request.form.get('categoria')
@@ -1284,7 +1343,10 @@ def api_create_product():
 
     imagen = request.files.get('imagen')
     if imagen and imagen.filename:
-        ext = imagen.filename.rsplit('.', 1)[-1].lower() if '.' in imagen.filename else 'png'
+        if not validate_image_file(imagen):
+            conn.close()
+            return jsonify({'message': 'Formato de imagen no válido o muy pesada (máx 5MB, solo PNG/JPG/GIF/WebP).'}), 400
+        ext = imagen.filename.rsplit('.', 1)[-1].lower()
         filename = f"{uuid.uuid4().hex}.{ext}"
         images_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'images')
         os.makedirs(images_dir, exist_ok=True)
@@ -1296,6 +1358,7 @@ def api_create_product():
     return jsonify({'message': 'Producto creado correctamente.', 'id_producto': product_id}), 201
 
 @app.route('/api/product/<int:product_id>', methods=['PUT'])
+@admin_required
 def api_update_product(product_id):
     nombre = request.form.get('nombre')
     categoria = request.form.get('categoria')
@@ -1324,7 +1387,11 @@ def api_update_product(product_id):
 
     imagen = request.files.get('imagen')
     if imagen and imagen.filename:
-        ext = imagen.filename.rsplit('.', 1)[-1].lower() if '.' in imagen.filename else 'png'
+        if not validate_image_file(imagen):
+            conn.close()
+            return jsonify({'message': 'Formato de imagen no válido o muy pesada (máx 5MB, solo PNG/JPG/GIF/WebP).'}), 400
+        ext = imagen.filename.rsplit('.', 1)[-1].lower()
+        filename = f"{uuid.uuid4().hex}.{ext}"
         filename = f"{uuid.uuid4().hex}.{ext}"
         images_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'images')
         os.makedirs(images_dir, exist_ok=True)
@@ -1340,6 +1407,7 @@ def api_update_product(product_id):
     return jsonify({'message': 'Producto actualizado correctamente.'})
 
 @app.route('/api/product/<int:product_id>', methods=['DELETE'])
+@admin_required
 def api_delete_product(product_id):
     conn = get_shared_db()
     conn.execute('DELETE FROM imagenes_productos WHERE id_producto = ?', (product_id,))
@@ -1350,6 +1418,7 @@ def api_delete_product(product_id):
     return jsonify({'message': 'Producto eliminado correctamente.'})
 
 @app.route('/api/client', methods=['POST'])
+@admin_required
 def api_create_client():
     data = request.get_json() or {}
     nombre = data.get('nombre')
@@ -1368,6 +1437,7 @@ def api_create_client():
     return jsonify({'message': 'Cliente creado correctamente.'}), 201
 
 @app.route('/api/client/<int:client_id>', methods=['PUT'])
+@admin_required
 def api_update_client(client_id):
     data = request.get_json() or {}
     nombre = data.get('nombre')
@@ -1386,33 +1456,13 @@ def api_update_client(client_id):
     return jsonify({'message': 'Cliente actualizado correctamente.'})
 
 @app.route('/api/client/<int:client_id>', methods=['DELETE'])
+@admin_required
 def api_delete_client(client_id):
     conn = get_shared_db()
     conn.execute('UPDATE clientes SET activo = 0 WHERE id_cliente = ?', (client_id,))
     conn.commit()
     conn.close()
     return jsonify({'message': 'Cliente eliminado correctamente.'})
-
-@app.route('/api/recover', methods=['POST'])
-def api_recover():
-    data = request.get_json() or {}
-    email = data.get('email')
-    password = data.get('password')
-
-    if not email or not password:
-        return jsonify({'message': 'Email y nueva contraseña son requeridos.'}), 400
-
-    conn = get_shared_db()
-    user = conn.execute('SELECT id_usuario FROM usuarios WHERE correo = ? LIMIT 1', (email,)).fetchone()
-    if not user:
-        conn.close()
-        return jsonify({'message': 'No se encontró un usuario con ese correo.'}), 404
-
-    conn.execute('UPDATE usuarios SET contraseña = ? WHERE correo = ?', (password, email))
-    conn.commit()
-    conn.close()
-    return jsonify({'message': 'Contraseña actualizada con éxito.'})
-
 
 # Migración: agregar columnas si no existen
 try:
@@ -1858,6 +1908,7 @@ def factura(order_id):
     return render_template('factura.html', order=order, items=items_list)
 
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("10 per minute")
 def login():
     cart_count = get_cart_count()
 
@@ -1874,7 +1925,8 @@ def login():
         ).fetchone()
         conn.close()
 
-        if user and user['password'] == password:
+        if user and check_password_hash(user['password'], password):
+            session.clear()
             session['user_id'] = user['id_usuario']
             session['username'] = user['nombre']
             session['user_email'] = user['correo']
@@ -1888,15 +1940,18 @@ def login():
                 return redirect(url_for('admin_panel_index'))
 
             next_url = request.form.get('next') or request.args.get('next') or url_for('home')
+            if not is_safe_url(next_url):
+                next_url = url_for('home')
             flash(f'¡Bienvenido de nuevo, {user["nombre"]}!', 'success')
             return redirect(next_url)
         else:
-            flash('Usuario o contraseña incorrectos.', 'error')
+            flash('Credenciales inválidas.', 'error')
 
     return render_template('login.html', cart_count=cart_count)
 
 
 @app.route('/registro', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def registro():
     if request.method == 'POST':
         username = request.form.get('username')
@@ -1918,7 +1973,7 @@ def registro():
             role_id = role['id_rol'] if role else 2
             conn.execute(
                 'INSERT INTO usuarios (id_usuario, nombre, correo, contraseña, id_rol, telefono) VALUES (NULL, ?, ?, ?, ?, ?)',
-                (username, email, password, role_id, telefono)
+                (username, email, generate_password_hash(password), role_id, telefono)
             )
             conn.commit()
             flash('Cuenta creada exitosamente. ¡Bienvenido!', 'success')
@@ -1990,14 +2045,14 @@ def perfil():
             confirm_pw = request.form.get('confirm_password', '')
 
             row = conn.execute('SELECT contraseña FROM usuarios WHERE id_usuario = ? LIMIT 1', (session['user_id'],)).fetchone()
-            if not row or row['contraseña'] != current_pw:
+            if not row or not check_password_hash(row['contraseña'], current_pw):
                 flash('La contraseña actual no es correcta.', 'error')
             elif len(new_pw) < 6:
                 flash('La nueva contraseña debe tener al menos 6 caracteres.', 'error')
             elif new_pw != confirm_pw:
                 flash('Las contraseñas nuevas no coinciden.', 'error')
             else:
-                conn.execute('UPDATE usuarios SET contraseña = ? WHERE id_usuario = ?', (new_pw, session['user_id']))
+                conn.execute('UPDATE usuarios SET contraseña = ? WHERE id_usuario = ?', (generate_password_hash(new_pw), session['user_id']))
                 conn.commit()
                 flash('Contraseña actualizada con éxito.', 'success')
 
@@ -2088,7 +2143,7 @@ def auth_google_callback():
         else:
             role = conn.execute('SELECT id_rol FROM roles WHERE nombre = ? LIMIT 1', ('Trabajador',)).fetchone()
             role_id = role['id_rol'] if role else 2
-            cursor = conn.execute('INSERT INTO usuarios (nombre, correo, contraseña, id_rol) VALUES (?, ?, ?, ?)', (username, email, 'oauth_simulated', role_id))
+            cursor = conn.execute('INSERT INTO usuarios (nombre, correo, contraseña, id_rol) VALUES (?, ?, ?, ?)', (username, email, generate_password_hash('oauth_' + uuid.uuid4().hex[:8]), role_id))
             user_id = cursor.lastrowid
             conn.execute('INSERT INTO cuentas_vinculadas (id_usuario, proveedor, proveedor_id, proveedor_correo) VALUES (?, "google", ?, ?)', (user_id, provider_id, email))
             conn.commit()
@@ -2164,4 +2219,4 @@ def mis_pedidos():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=False, port=5000)
