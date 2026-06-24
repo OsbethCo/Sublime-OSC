@@ -417,6 +417,12 @@ def ensure_order_statuses(conn):
     if count == 0:
         conn.executemany('INSERT INTO estados_pedido (nombre) VALUES (?)', [('Pendiente de Verificaci\u00f3n',), ('Procesando',), ('Enviado',), ('Entregado',)])
         conn.commit()
+    else:
+        existing = {row['nombre'] for row in conn.execute('SELECT nombre FROM estados_pedido').fetchall()}
+        for nombre in ['Pendiente de Verificaci\u00f3n', 'Procesando', 'Enviado', 'Entregado']:
+            if nombre not in existing:
+                conn.execute('INSERT INTO estados_pedido (nombre) VALUES (?)', (nombre,))
+        conn.commit()
 
 
 def get_or_create_cart(conn, cliente_id):
@@ -1125,6 +1131,14 @@ def admin_create_invoice():
             'INSERT INTO detalle_ventas (id_venta, id_producto, cantidad, precio_unitario) VALUES (?, ?, ?, ?)',
             (venta_id, item.get('id'), item.get('quantity', 1), item.get('price', 0))
         )
+        # Descontar stock para venta en fisico
+        pid = item.get('id')
+        if pid:
+            qty = int(item.get('quantity', 1))
+            conn.execute(
+                'UPDATE inventario SET stock_actual = MAX(0, stock_actual - ?) WHERE id_producto = ?',
+                (qty, pid)
+            )
     # Insertar en facturas con desglose de IVA
     conn.execute(
         'INSERT INTO facturas (id_venta, subtotal, porcentaje_iva, impuesto, total_usd) VALUES (?, ?, ?, ?, ?)',
@@ -1316,7 +1330,7 @@ def api_sales_data():
         'WHERE p.activo = 1 ORDER BY p.nombre ASC LIMIT 20'
     ).fetchall()
     clients = conn.execute(
-        'SELECT id_cliente, nombre FROM clientes WHERE activo = 1 ORDER BY nombre ASC LIMIT 20'
+        "SELECT id_cliente, nombre FROM clientes WHERE activo = 1 AND origen = 'manual' ORDER BY nombre ASC LIMIT 20"
     ).fetchall()
     conn.close()
     return jsonify({'products': [dict(row) for row in products], 'clients': [dict(row) for row in clients]})
