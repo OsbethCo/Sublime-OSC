@@ -583,7 +583,7 @@ async function loadOrders() {
         container.innerHTML = response.orders.map(order => {
 
             const statusColors = {
-                'Pendiente de Verificacion': '#ffa500',
+                'Pendiente de Verificaci\u00f3n': '#ffa500',
                 'Procesando': '#3498db',
                 'Enviado': '#9b59b6',
                 'Entregado': '#00b350'
@@ -595,7 +595,7 @@ async function loadOrders() {
 
             let actionsHtml = '';
 
-            if (order.estado === 'Pendiente de Verificacion') {
+            if (order.estado === 'Pendiente de Verificaci\u00f3n') {
 
                 actionsHtml = `
                     <button class="btn-primary" style="font-size:0.8rem;padding:6px 12px;" onclick="verifyOrder(${order.id})">
@@ -636,7 +636,7 @@ async function loadOrders() {
                                 ${order.numero_guia ? ' | Guia: ' + order.numero_guia : ''}
                             </p>
                             <p style="font-size:0.85rem;color:var(--text-muted);">
-                                Total: $${order.total} | Fecha: ${order.fecha || 'N/A'}
+                                Total: $${parseFloat(order.total).toFixed(2)} (Bs ${(parseFloat(order.total) * (window.usdRate || 40)).toFixed(2)}) | Fecha: ${order.fecha || 'N/A'}
                             </p>
                         </div>
                         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
