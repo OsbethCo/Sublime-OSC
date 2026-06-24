@@ -48,6 +48,9 @@
             <button type="submit" class="btn-primary glow-btn" style="width: 100%; padding: 16px; border-radius: 15px; font-size: 1.1rem; letter-spacing: 2px; border: none; cursor: pointer; text-transform: uppercase; font-weight: 900; background: var(--primary-grad); color: #000; position: relative; overflow: hidden;">
                 <span style="position: relative; z-index: 1;">ENTRAR</span>
             </button>
+            <p style="text-align: center; margin-top: 12px;">
+                <a href="#" onclick="forgotPassword()" style="color: #00b350; font-size: 0.85rem; text-decoration: none;">¿Olvidaste tu contraseña?</a>
+            </p>
         </form>
         
         <script src="{{ url_for('static', filename='login.js') }}"></script>
@@ -107,5 +110,24 @@
             }
         });
     }
+
+    window.forgotPassword = function() {
+        const email = prompt('Ingresa tu correo electrónico para recuperar tu contraseña:');
+        if (!email || !email.includes('@')) return;
+        fetch('/api/forgot', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({email: email})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.debug_url) {
+                alert('Modo desarrollo — enlace de recuperación:\n' + data.debug_url);
+            } else {
+                alert(data.mensaje || 'Revisa tu correo para continuar.');
+            }
+        })
+        .catch(() => alert('Error al enviar la solicitud. Intenta de nuevo.'));
+    };
 </script>
 {% endblock %}

@@ -1507,6 +1507,20 @@ try:
     conn.commit()
 except Exception:
     pass
+try:
+    conn = get_shared_db()
+    conn.execute('''CREATE TABLE IF NOT EXISTS password_resets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_usuario INTEGER NOT NULL,
+        token VARCHAR(64) NOT NULL UNIQUE,
+        expires_at DATETIME NOT NULL,
+        used INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario)
+    )''')
+    conn.commit()
+except Exception:
+    pass
 conn.close()
 
 # Semillas en la base de datos compartida (esquema SQL en español)
@@ -1562,6 +1576,127 @@ if total == 0:
     conn.commit()
 
 conn.close()
+
+# =========================================================
+# Password recovery via email
+# =========================================================
+import smtplib
+import secrets
+from email.mime.text import MIMEText
+from datetime import datetime, timedelta
+
+SMTP_HOST = os.environ.get('SMTP_HOST', '')
+SMTP_PORT = int(os.environ.get('SMTP_PORT', '587'))
+SMTP_USER = os.environ.get('SMTP_USER', '')
+SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
+MAIL_FROM = os.environ.get('MAIL_FROM', 'noreply@sublime.com')
+
+def send_reset_email(to_email, token):
+    if not SMTP_HOST or not SMTP_USER:
+        return False
+    reset_url = url_for('reset_password', token=token, _external=True)
+    msg = MIMEText(f'''Hola,
+
+Recibimos una solicitud para restablecer tu contraseña en Sublime's.
+
+Haz clic en el siguiente enlace para crear una nueva contraseña:
+
+{reset_url}
+
+Este enlace expira en 1 hora.
+
+Si no solicitaste este cambio, ignora este mensaje.
+
+— Sublime's''')
+    msg['Subject'] = 'Restablecimiento de contraseña - Sublime\'s'
+    msg['From'] = MAIL_FROM
+    msg['To'] = to_email
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.send_message(msg)
+        return True
+    except Exception:
+        return False
+
+@app.route('/api/forgot', methods=['POST'])
+def api_forgot():
+    data = request.get_json() or {}
+    email = data.get('email', '').strip()
+
+    conn = get_shared_db()
+    user = conn.execute('SELECT id_usuario, nombre, correo FROM usuarios WHERE correo = ? LIMIT 1', (email,)).fetchone()
+    conn.close()
+
+    # Always return success to avoid user enumeration
+    if not user:
+        return jsonify({'mensaje': 'Si el correo está registrado, recibirás un enlace de recuperación.'})
+
+    token = secrets.token_urlsafe(48)
+    expires_at = (datetime.utcnow() + timedelta(hours=1)).isoformat()
+
+    conn = get_shared_db()
+    conn.execute('INSERT INTO password_resets (id_usuario, token, expires_at) VALUES (?, ?, ?)',
+                 (user['id_usuario'], token, expires_at))
+    conn.commit()
+    conn.close()
+
+    sent = send_reset_email(user['correo'], token)
+    if not sent:
+        # If email is not configured, show the link directly in the response (dev mode)
+        reset_url = url_for('reset_password', token=token, _external=True)
+        app.logger.warning(f'SMTP not configured. Reset link: {reset_url}')
+        return jsonify({'mensaje': 'Correo no configurado. Usa el enlace de depuración.', 'debug_url': reset_url})
+
+    return jsonify({'mensaje': 'Si el correo está registrado, recibirás un enlace de recuperación.'})
+
+@app.route('/recuperar/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    conn = get_shared_db()
+    row = conn.execute(
+        'SELECT id_usuario, expires_at, used FROM password_resets WHERE token = ? LIMIT 1',
+        (token,)
+    ).fetchone()
+
+    if not row:
+        conn.close()
+        flash('Enlace de recuperación inválido.', 'error')
+        return redirect(url_for('login'))
+
+    if row['used']:
+        conn.close()
+        flash('Este enlace ya fue utilizado.', 'error')
+        return redirect(url_for('login'))
+
+    try:
+        expires = datetime.fromisoformat(row['expires_at'])
+        if datetime.utcnow() > expires:
+            conn.close()
+            flash('El enlace ha expirado. Solicita uno nuevo.', 'error')
+            return redirect(url_for('login'))
+    except Exception:
+        pass
+
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        confirm = request.form.get('confirm', '')
+
+        if len(password) < 6:
+            flash('La contraseña debe tener al menos 6 caracteres.', 'error')
+        elif password != confirm:
+            flash('Las contraseñas no coinciden.', 'error')
+        else:
+            conn.execute('UPDATE usuarios SET contraseña = ? WHERE id_usuario = ?',
+                         (generate_password_hash(password), row['id_usuario']))
+            conn.execute('UPDATE password_resets SET used = 1 WHERE token = ?', (token,))
+            conn.commit()
+            conn.close()
+            flash('Contraseña actualizada con éxito. Ya puedes iniciar sesión.', 'success')
+            return redirect(url_for('login'))
+
+    conn.close()
+    return render_template('reset_password.html', token=token)
 
 
 @app.route('/')
