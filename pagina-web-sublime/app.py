@@ -405,8 +405,8 @@ def get_or_create_client(conn, email, nombre, direccion, telefono='', cedula='')
         return cliente['id_cliente']
 
     cursor = conn.execute(
-        'INSERT INTO clientes (nombre, correo, telefono, direccion, cedula) VALUES (?, ?, ?, ?, ?)',
-        (nombre, email, telefono, direccion, cedula)
+        'INSERT INTO clientes (nombre, correo, telefono, direccion, cedula, origen) VALUES (?, ?, ?, ?, ?, ?)',
+        (nombre, email, telefono, direccion, cedula, 'auto')
     )
     conn.commit()
     return cursor.lastrowid
@@ -415,7 +415,7 @@ def get_or_create_client(conn, email, nombre, direccion, telefono='', cedula='')
 def ensure_order_statuses(conn):
     count = conn.execute('SELECT COUNT(*) AS total FROM estados_pedido').fetchone()['total']
     if count == 0:
-        conn.executemany('INSERT INTO estados_pedido (nombre) VALUES (?)', [('Pendiente',), ('Procesando',), ('Enviado',), ('Entregado',)])
+        conn.executemany('INSERT INTO estados_pedido (nombre) VALUES (?)', [('Pendiente de Verificaci\u00f3n',), ('Procesando',), ('Enviado',), ('Entregado',)])
         conn.commit()
 
 
@@ -985,7 +985,7 @@ def api_checkout():
                 return jsonify({'mensaje': msg}), 400
 
     cliente_id = get_or_create_client(conn, user_email, user_name, address)
-    status = conn.execute('SELECT id_estado FROM estados_pedido WHERE nombre = ? LIMIT 1', ('Pendiente',)).fetchone()
+    status = conn.execute('SELECT id_estado FROM estados_pedido WHERE nombre = ? LIMIT 1', ('Pendiente de Verificaci\u00f3n',)).fetchone()
     status_id = status['id_estado'] if status else 1
 
     total = calculate_cart_total(cart_items)
@@ -1215,7 +1215,7 @@ def api_inventory():
 def api_clients():
     conn = get_shared_db()
     clients = conn.execute(
-        'SELECT id_cliente, nombre, correo, telefono, direccion FROM clientes WHERE activo = 1 ORDER BY nombre ASC LIMIT 20'
+        "SELECT id_cliente, nombre, correo, telefono, direccion FROM clientes WHERE activo = 1 AND origen = 'manual' ORDER BY nombre ASC LIMIT 20"
     ).fetchall()
     conn.close()
     return jsonify({'clients': [dict(row) for row in clients]})
@@ -1436,7 +1436,7 @@ def api_create_client():
         return jsonify({'message': 'Nombre y correo son requeridos.'}), 400
 
     conn = get_shared_db()
-    conn.execute('INSERT INTO clientes (nombre, correo, telefono, direccion, activo) VALUES (?, ?, ?, ?, 1)',
+    conn.execute("INSERT INTO clientes (nombre, correo, telefono, direccion, activo, origen) VALUES (?, ?, ?, ?, 1, 'manual')",
                  (nombre, correo, telefono, direccion))
     conn.commit()
     conn.close()
@@ -1470,7 +1470,96 @@ def api_delete_client(client_id):
     conn.close()
     return jsonify({'message': 'Cliente eliminado correctamente.'})
 
-# Migración: agregar columnas si no existen
+@app.route('/api/orders', methods=['GET'])
+@admin_required
+def api_orders():
+    conn = get_shared_db()
+    orders = conn.execute(
+        "SELECT p.id_pedido AS id, c.nombre AS cliente, c.correo, c.telefono, "
+        "e.nombre AS estado, p.total, p.fecha, "
+        "env.direccion_envio, env.metodo_pago, env.referencia_pago, env.empresa_envio, env.numero_guia "
+        "FROM pedidos p "
+        "LEFT JOIN clientes c ON p.id_cliente = c.id_cliente "
+        "LEFT JOIN estados_pedido e ON p.id_estado = e.id_estado "
+        "LEFT JOIN envios env ON env.id_pedido = p.id_pedido "
+        "ORDER BY p.fecha DESC LIMIT 50"
+    ).fetchall()
+    conn.close()
+    return jsonify({'orders': [dict(row) for row in orders]})
+
+@app.route('/api/order/<int:order_id>/status', methods=['PUT'])
+@admin_required
+def api_update_order_status(order_id):
+    data = request.get_json() or {}
+    nuevo_estado = data.get('estado')
+    if not nuevo_estado:
+        return jsonify({'message': 'Estado requerido.'}), 400
+
+    conn = get_shared_db()
+    status = conn.execute('SELECT id_estado FROM estados_pedido WHERE nombre = ? LIMIT 1', (nuevo_estado,)).fetchone()
+    if not status:
+        conn.close()
+        return jsonify({'message': 'Estado invalido.'}), 400
+
+    conn.execute('UPDATE pedidos SET id_estado = ? WHERE id_pedido = ?', (status['id_estado'], order_id))
+    conn.commit()
+
+    tracking = data.get('tracking', '')
+    if tracking:
+        conn.execute('UPDATE envios SET numero_guia = ?, empresa_envio = ?, estado_envio = ? WHERE id_pedido = ?',
+                     (tracking, data.get('empresa_envio', ''), 'Enviado', order_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'message': f'Estado actualizado a {nuevo_estado}.'})
+
+@app.route('/api/order/<int:order_id>/verify', methods=['PUT'])
+@admin_required
+def api_verify_order_payment(order_id):
+    conn = get_shared_db()
+
+    pedido = conn.execute('SELECT id_estado, total FROM pedidos WHERE id_pedido = ? LIMIT 1', (order_id,)).fetchone()
+    if not pedido:
+        conn.close()
+        return jsonify({'message': 'Pedido no encontrado.'}), 404
+
+    estado = conn.execute('SELECT nombre FROM estados_pedido WHERE id_estado = ? LIMIT 1', (pedido['id_estado'],)).fetchone()
+    if estado and estado['nombre'] != 'Pendiente de Verificacion':
+        conn.close()
+        return jsonify({'message': 'El pedido ya fue procesado.'}), 400
+
+    procesando = conn.execute("SELECT id_estado FROM estados_pedido WHERE nombre = 'Procesando' LIMIT 1").fetchone()
+    if procesando:
+        conn.execute('UPDATE pedidos SET id_estado = ? WHERE id_pedido = ?', (procesando['id_estado'], order_id))
+
+    items = conn.execute(
+        'SELECT dp.id_producto, dp.cantidad FROM detalle_pedidos dp WHERE dp.id_pedido = ?',
+        (order_id,)
+    ).fetchall()
+    for item in items:
+        if item['id_producto']:
+            conn.execute(
+                'UPDATE inventario SET stock_actual = MAX(0, stock_actual - ?) WHERE id_producto = ?',
+                (item['cantidad'], item['id_producto'])
+            )
+
+    conn.commit()
+    conn.close()
+    return jsonify({'message': 'Pago verificado, stock descontado y pedido en procesamiento.'})
+
+@app.route('/api/order/<int:order_id>/items', methods=['GET'])
+def api_order_items(order_id):
+    conn = get_shared_db()
+    items = conn.execute(
+        'SELECT dp.cantidad, dp.precio_unitario, pr.nombre AS name '
+        'FROM detalle_pedidos dp '
+        'LEFT JOIN productos pr ON dp.id_producto = pr.id_producto '
+        'WHERE dp.id_pedido = ?',
+        (order_id,)
+    ).fetchall()
+    conn.close()
+    return jsonify({'items': [dict(row) for row in items]})
+
+# Migracion: agregar columnas si no existen
 try:
     conn = get_shared_db()
     conn.execute('ALTER TABLE usuarios ADD COLUMN telefono VARCHAR(20)')
@@ -1480,6 +1569,12 @@ except Exception:
 try:
     conn = get_shared_db()
     conn.execute('ALTER TABLE clientes ADD COLUMN cedula VARCHAR(20)')
+    conn.commit()
+except Exception:
+    pass
+try:
+    conn = get_shared_db()
+    conn.execute('ALTER TABLE clientes ADD COLUMN origen VARCHAR(10) DEFAULT "auto"')
     conn.commit()
 except Exception:
     pass
@@ -1994,7 +2089,7 @@ def checkout():
                     return redirect(url_for('carrito'))
 
         cliente_id = get_or_create_client(conn, session.get('user_email'), name, address, telefono, cedula)
-        status = conn.execute('SELECT id_estado FROM estados_pedido WHERE nombre = ? LIMIT 1', ('Pendiente',)).fetchone()
+        status = conn.execute('SELECT id_estado FROM estados_pedido WHERE nombre = ? LIMIT 1', ('Pendiente de Verificaci\u00f3n',)).fetchone()
         status_id = status['id_estado'] if status else 1
 
         iva_rate = get_iva_rate()

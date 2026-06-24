@@ -58,7 +58,8 @@ function formatCurrency(value) {
 
 function showToast(
     message,
-    type = 'success'
+    type = 'success',
+    duration = 3000
 ){
 
     const container =
@@ -73,7 +74,7 @@ function showToast(
     toast.className =
         `toast ${type}`;
 
-    toast.textContent = 
+    toast.innerHTML =
         message;
 
     container.appendChild(toast);
@@ -89,7 +90,7 @@ function showToast(
 
         }, 300);
 
-    }, 3000);
+    }, duration);
 }
 
 /* =========================
@@ -551,6 +552,213 @@ async function loadClients() {
 }
 
 /* =========================
+   PEDIDOS ONLINE
+========================= */
+
+async function loadOrders() {
+
+    try {
+
+        const response = await apiRequest('orders');
+
+        const container = document.getElementById('ordersList');
+
+        if (!container) return;
+
+        if (!response.orders || response.orders.length === 0) {
+
+            container.innerHTML = `
+                <div class="client-card">
+                    <div class="client-avatar">0</div>
+                    <div>
+                        <h3>No hay pedidos</h3>
+                        <p>Los pedidos online apareceran aqui.</p>
+                    </div>
+                </div>`;
+
+            return;
+
+        }
+
+        container.innerHTML = response.orders.map(order => {
+
+            const statusColors = {
+                'Pendiente de Verificacion': '#ffa500',
+                'Procesando': '#3498db',
+                'Enviado': '#9b59b6',
+                'Entregado': '#00b350'
+            };
+
+            const color = statusColors[order.estado] || '#888';
+
+            const itemsHtml = `<button class="btn-outline" style="font-size:0.8rem;padding:4px 10px;" onclick="viewOrderItems(${order.id})">Ver items</button>`;
+
+            let actionsHtml = '';
+
+            if (order.estado === 'Pendiente de Verificacion') {
+
+                actionsHtml = `
+                    <button class="btn-primary" style="font-size:0.8rem;padding:6px 12px;" onclick="verifyOrder(${order.id})">
+                        Verificar Pago
+                    </button>`;
+
+            } else if (order.estado === 'Procesando') {
+
+                actionsHtml = `
+                    <input type="text" id="tracking-${order.id}" placeholder="Nro guia" style="width:120px;padding:6px;border-radius:6px;border:1px solid var(--border-color);background:var(--card-bg);color:var(--text-color);font-size:0.8rem;">
+                    <button class="btn-primary" style="font-size:0.8rem;padding:6px 12px;" onclick="shipOrder(${order.id})">
+                        Enviar
+                    </button>`;
+
+            } else if (order.estado === 'Enviado') {
+
+                actionsHtml = `
+                    <button class="btn-outline" style="font-size:0.8rem;padding:6px 12px;" onclick="deliverOrder(${order.id})">
+                        Marcar Entregado
+                    </button>`;
+
+            }
+
+            return `
+                <div class="client-card-modern" style="border-left: 4px solid ${color};">
+                    <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+                        <div>
+                            <h3>#${order.id} - ${order.cliente || 'Sin nombre'}</h3>
+                            <p style="font-size:0.85rem;color:var(--text-muted);">
+                                ${order.correo || ''} ${order.telefono ? '| ' + order.telefono : ''}
+                            </p>
+                            <p style="font-size:0.85rem;color:var(--text-muted);">
+                                Pago: ${order.metodo_pago || 'N/A'} | Ref: ${order.referencia_pago || 'N/A'}
+                            </p>
+                            <p style="font-size:0.85rem;color:var(--text-muted);">
+                                Direccion: ${order.direccion_envio || 'N/A'}
+                                ${order.empresa_envio ? ' (' + order.empresa_envio + ')' : ''}
+                                ${order.numero_guia ? ' | Guia: ' + order.numero_guia : ''}
+                            </p>
+                            <p style="font-size:0.85rem;color:var(--text-muted);">
+                                Total: $${order.total} | Fecha: ${order.fecha || 'N/A'}
+                            </p>
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+                            <span style="font-weight:700;color:${color};font-size:0.9rem;">${order.estado}</span>
+                            ${itemsHtml}
+                            ${actionsHtml}
+                        </div>
+                    </div>
+                </div>`;
+
+        }).join('');
+
+    } catch (error) {
+
+        showToast('Error cargando pedidos: ' + error.message, 'error');
+
+    }
+
+}
+
+// Verificar pago
+async function verifyOrder(orderId) {
+
+    if (!confirm('Confirmar pago? Se descontara el stock automaticamente.')) return;
+
+    try {
+
+        await apiRequest('order/' + orderId + '/verify', { method: 'PUT' });
+
+        showToast('Pago verificado. Stock descontado.', 'success');
+
+        await loadOrders();
+
+    } catch (error) {
+
+        showToast(error.message, 'error');
+
+    }
+
+}
+
+// Enviar pedido
+async function shipOrder(orderId) {
+
+    const tracking = document.getElementById('tracking-' + orderId)?.value;
+
+    const data = { estado: 'Enviado' };
+
+    if (tracking) data.tracking = tracking;
+
+    try {
+
+        await apiRequest('order/' + orderId + '/status', {
+            method: 'PUT',
+            body: data
+        });
+
+        showToast('Pedido marcado como Enviado.', 'success');
+
+        await loadOrders();
+
+    } catch (error) {
+
+        showToast(error.message, 'error');
+
+    }
+
+}
+
+// Marcar entregado
+async function deliverOrder(orderId) {
+
+    if (!confirm('Confirmar entrega?')) return;
+
+    try {
+
+        await apiRequest('order/' + orderId + '/status', {
+            method: 'PUT',
+            body: { estado: 'Entregado' }
+        });
+
+        showToast('Pedido entregado.', 'success');
+
+        await loadOrders();
+
+    } catch (error) {
+
+        showToast(error.message, 'error');
+
+    }
+
+}
+
+// Ver items del pedido
+async function viewOrderItems(orderId) {
+
+    try {
+
+        const response = await apiRequest('order/' + orderId + '/items');
+
+        const itemsHtml = response.items.map(item =>
+            `<li style="padding:8px 0;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;">
+                <span>${item.name || 'Producto'}</span>
+                <span>${item.cantidad} x $${item.precio_unitario}</span>
+            </li>`
+        ).join('');
+
+        showToast(
+            '<ul style="list-style:none;padding:0;margin:0;text-align:left;">' + itemsHtml + '</ul>',
+            'info',
+            5000
+        );
+
+    } catch (error) {
+
+        showToast(error.message, 'error');
+
+    }
+
+}
+
+/* =========================
    FACTURAS
 ========================= */
 
@@ -886,7 +1094,8 @@ window.addEventListener('DOMContentLoaded', async () => {
         loadInventory(),
         loadClients(),
         loadInvoices(),
-        loadSalesData()
+        loadSalesData(),
+        loadOrders()
     ]);
 
 });
@@ -909,9 +1118,10 @@ const sectionTitles = {
     dashboard: 'Bienvenido, Admin!',
     inventory: 'Inventario',
     sales: 'Ventas',
+    orders: 'Pedidos Online',
     clients: 'Clientes',
     invoices: 'Facturas',
-    settings: 'Configuración'
+    settings: 'Configuraci\u00f3n'
 
 };
 
@@ -940,6 +1150,8 @@ menuItems.forEach(item => {
             sectionTitles[target] || 'Panel';
 
         toggleReportButton(target);
+
+        if (target === 'orders') loadOrders();
 
     });
 
