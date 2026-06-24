@@ -12,7 +12,11 @@
     </form>
     {% if debug_url %}
     <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0,179,80,0.1); border-radius: 8px; word-break: break-all;">
-        <p style="font-size: 0.85rem; color: var(--text-muted);">SMTP no configurado. Usa este enlace:</p>
+        {% if sent %}
+        <p style="font-size: 0.85rem; color: var(--text-muted);">Correo enviado. También puedes usar este enlace directo:</p>
+        {% else %}
+        <p style="font-size: 0.85rem; color: var(--text-muted);">El envío de correo falló. Usa este enlace directo:</p>
+        {% endif %}
         <a href="{{ debug_url }}" style="color: #00b350;">{{ debug_url }}</a>
     </div>
     {% endif %}

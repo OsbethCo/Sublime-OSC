@@ -1635,7 +1635,8 @@ Si no solicitaste este cambio, ignora este mensaje.
             server.login(SMTP_USER, SMTP_PASSWORD)
             server.send_message(msg)
         return True
-    except Exception:
+    except Exception as e:
+        app.logger.error(f'Error enviando email a {to_email}: {e}')
         return False
 
 @app.route('/api/forgot', methods=['POST'])
@@ -2155,10 +2156,11 @@ def olvide():
                 conn.commit()
                 conn.close()
                 sent = send_reset_email(user['correo'], token)
-                if not sent:
-                    reset_url = url_for('reset_password', token=token, _external=True)
-                    app.logger.warning(f'SMTP not configured. Reset link: {reset_url}')
-                    return render_template('olvide.html', debug_url=reset_url)
+                reset_url = url_for('reset_password', token=token, _external=True)
+                if sent:
+                    flash('Revisa tu correo para continuar. Si no lo ves, revisa la bandeja de spam.', 'success')
+                app.logger.warning(f'Reset link: {reset_url}')
+                return render_template('olvide.html', debug_url=reset_url, sent=sent)
             except Exception as e:
                 app.logger.error(f'Error en olvide: {e}')
         flash('Si el correo está registrado, recibirás un enlace de recuperación.', 'success')
