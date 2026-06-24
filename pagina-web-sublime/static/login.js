@@ -31,7 +31,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (respuesta.ok) {
                     localStorage.setItem('sesionActiva', 'true');
                     localStorage.setItem('nombreUsuario', usuarioInput);
-                    window.location.href = nextRedirect || '/';
+                    // Redirigir admin al panel, resto a home
+                    const rol = datos.usuario?.rol || '';
+                    if (rol === 'Administrador Panel') {
+                        window.location.href = nextRedirect || '/admin-panel/';
+                    } else {
+                        window.location.href = nextRedirect || '/';
+                    }
                 } else {
                     mensajeError.textContent = datos.mensaje || 'El usuario o la contraseña no son correctos. Inténtalo de nuevo.';
                     mensajeError.style.display = 'block';

@@ -1399,7 +1399,6 @@ def api_update_product(product_id):
             return jsonify({'message': 'Formato de imagen no válido o muy pesada (máx 5MB, solo PNG/JPG/GIF/WebP).'}), 400
         ext = imagen.filename.rsplit('.', 1)[-1].lower()
         filename = f"{uuid.uuid4().hex}.{ext}"
-        filename = f"{uuid.uuid4().hex}.{ext}"
         images_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'images')
         os.makedirs(images_dir, exist_ok=True)
         imagen.save(os.path.join(images_dir, filename))
@@ -2055,6 +2054,7 @@ def factura(order_id):
 
     order = {
         'id': order_row['id'],
+        'fecha': order_row['fecha'] or 'N/A',
         'subtotal': items_subtotal,
         'iva_pct': iva_rate,
         'iva_amount': iva_amount,

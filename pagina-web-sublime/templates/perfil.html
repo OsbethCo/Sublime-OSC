@@ -181,43 +181,10 @@
                     <i class="fa-solid fa-clock-rotate-left"></i>
                     <h2>Historial de Compras</h2>
                 </div>
-
-                {% if orders_with_items %}
-                    <div class="orders-list">
-                        {% for entry in orders_with_items %}
-                        <div class="order-entry">
-                            <div class="order-entry-header">
-                                <div>
-                                    <span class="order-id">#{{ entry.order.id }}</span>
-                                    <span class="order-status {{ 'status-pending' if entry.order.status == 'Pendiente de Verificación' else 'status-done' }}">
-                                        {{ entry.order.status }}
-                                    </span>
-                                </div>
-                                <span class="order-total">{{ format_price(entry.order.total) }}</span>
-                            </div>
-                            <p class="order-address"><i class="fa-solid fa-location-dot"></i> {{ entry.order.address }}</p>
-                            <p class="order-payment"><i class="fa-solid fa-credit-card"></i> {{ entry.order.payment_method or 'N/A' }}</p>
-                            <ul class="order-items-list">
-                                {% for item in entry.items %}
-                                <li>
-                                    <span>{{ item.name }}</span>
-                                    <span>{{ format_price(item.price) }}</span>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                            <a href="{{ url_for('factura', order_id=entry.order.id) }}" class="btn-outline order-factura-btn">
-                                <i class="fa-solid fa-file-invoice"></i> Ver factura
-                            </a>
-                        </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="empty-orders">
-                        <i class="fa-solid fa-bag-shopping fa-3x"></i>
-                        <p>Aún no has realizado ninguna compra.</p>
-                        <a href="{{ url_for('catalogo') }}" class="btn-primary" style="margin-top: 15px; display: inline-block;">Explorar catálogo</a>
-                    </div>
-                {% endif %}
+                <div class="empty-orders">
+                    <i class="fa-solid fa-bag-shopping fa-3x"></i>
+                    <p>Revisa tus pedidos en la sección <a href="{{ url_for('mis_pedidos') }}">Mis Pedidos</a>.</p>
+                </div>
             </div>
         </div>
 
