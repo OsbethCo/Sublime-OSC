@@ -284,7 +284,7 @@ async function fetchOrders() {
                     </div>
                 </div>
                 <div class="order-chips">
-                    <span class="order-chip shipment">Envío: ${order.empresa_envio || 'Sin asignar'}</span>
+                    <span class="order-chip shipment">Envío: ${order.empresa_envio && order.empresa_envio !== 'Pendiente' ? order.empresa_envio : 'Sin asignar'}</span>
                     <span class="order-chip tracking">Guía: ${order.numero_guia || 'Pendiente'}</span>
                     <div class="order-actions">
                         <button type="button" onclick="showOrderDetail(${order.id})" class="btn-secondary">Ver detalle</button>

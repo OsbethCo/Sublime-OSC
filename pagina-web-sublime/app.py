@@ -577,6 +577,20 @@ ensure_shared_db()
 # Migrar estados de pedido al iniciar
 conn = get_shared_db()
 ensure_order_statuses(conn)
+# Crear envios faltantes para pedidos que no tienen (pedidos viejos antes de la tabla envios)
+conn.execute(
+    "INSERT OR IGNORE INTO envios (id_pedido, direccion_envio, empresa_envio, numero_guia, estado_envio, fecha_envio, metodo_pago, referencia_pago, tipo_envio) "
+    "SELECT p.id_pedido, '', 'Pendiente', '', 'Pendiente', datetime('now'), '', '', 'destino' "
+    "FROM pedidos p WHERE p.id_pedido NOT IN (SELECT id_pedido FROM envios)"
+)
+# Reemplazar 'Pendiente' en empresa_envio (bug del checkout API) con texto descriptivo
+conn.execute(
+    "UPDATE envios SET empresa_envio = CASE tipo_envio "
+    "WHEN 'destino' THEN 'Cobro a Destino' WHEN 'tienda' THEN 'Retiro en Tienda' "
+    "WHEN 'agencia' THEN 'Retirar en Agencia' ELSE 'Pendiente' END "
+    "WHERE empresa_envio = 'Pendiente' AND tipo_envio != ''"
+)
+conn.commit()
 conn.close()
 
 # Si creamos una DB vacía, permitir que SQLAlchemy cree las tablas definidas en models.py
@@ -1029,7 +1043,7 @@ def api_checkout():
 
     conn.execute(
         'INSERT INTO envios (id_pedido, direccion_envio, empresa_envio, numero_guia, estado_envio, fecha_envio, metodo_pago, referencia_pago, tipo_envio) VALUES (?, ?, ?, ?, ?, datetime("now"), ?, ?, ?)',
-        (pedido_id, address, 'Pendiente', '', 'Pendiente', payment_method or 'Pendiente', reference or '', 'destino')
+        (pedido_id, address, 'Cobro a Destino', '', 'Pendiente', payment_method or 'Pendiente', reference or '', 'destino')
     )
 
     # También crear registro en ventas / detalle_ventas para que aparezca en Facturas del admin
