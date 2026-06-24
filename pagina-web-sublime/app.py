@@ -1470,9 +1470,9 @@ def api_delete_client(client_id):
     conn.close()
     return jsonify({'message': 'Cliente eliminado correctamente.'})
 
-@app.route('/api/orders', methods=['GET'])
+@app.route('/api/admin/orders', methods=['GET'])
 @admin_required
-def api_orders():
+def api_admin_orders():
     conn = get_shared_db()
     orders = conn.execute(
         "SELECT p.id_pedido AS id, c.nombre AS cliente, c.correo, c.telefono, "
@@ -1547,6 +1547,7 @@ def api_verify_order_payment(order_id):
     return jsonify({'message': 'Pago verificado, stock descontado y pedido en procesamiento.'})
 
 @app.route('/api/order/<int:order_id>/items', methods=['GET'])
+@admin_required
 def api_order_items(order_id):
     conn = get_shared_db()
     items = conn.execute(

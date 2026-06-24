@@ -559,7 +559,7 @@ async function loadOrders() {
 
     try {
 
-        const response = await apiRequest('orders');
+        const response = await apiRequest('admin/orders');
 
         const container = document.getElementById('ordersList');
 
