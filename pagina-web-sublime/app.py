@@ -301,7 +301,7 @@ def seed_default_admin():
         conn.close()
 
 
-CATEGORIES = ['camisas', 'tazas', 'gorras', 'llaveros', 'termos/filtros', 'mousepads', 'bolígrafos']
+CATEGORIES = ['camisas', 'tazas', 'gorras', 'llaveros', 'Termos', 'Mousepads', 'Boligrafos']
 
 
 def validate_stock(conn, product_id, quantity=1):
@@ -1592,10 +1592,60 @@ if total == 0:
 
     conn.commit()
 
-conn.close()
+    # Seed nuevos productos (Boligrafos, Mousepads, Termos)
+    new_products = {
+        'Boligrafos': (3.00, [
+            ('boligrafo cantv', 'boligrafo cantv', '680256d42e4444b5a71952ba8df1f7a1.jpeg'),
+            ('boligrafo charlie brown', 'boligrafo charlie brown', '5fd043848866401192a045834b01a30a.jpeg'),
+            ('boligrafo coca cola rojo', 'boligrafo coca cola rojo', '79d51ec9423c43afac3fb01047a59568.jpeg'),
+            ('boligrafo coca cola', 'boligrafo coca cola', 'bf9bd4841b074feeae021b87b16f497b.jpeg'),
+            ('boligrafo gallinas', 'boligrafo gallinas', '2e127431289e4a58933af02f5caee648.jpeg'),
+            ('boligrafo mama mariposas', 'boligrafo mama mariposas', '472a51b744a84ce49bf6841016fc95bb.jpeg'),
+            ('boligrafo pepsi', 'boligrafo pepsi', '94b5c5c0d0fd40a99159813c3467dc1e.jpeg'),
+            ('boligrafo poo', 'boligrafo poo', '2d85a9f924f74581be19bc6902ede4fe.jpeg'),
+            ('boligrafo stitch', 'boligrafo stitch', '28425fb3e17d4733ac812fd42915459e.jpeg'),
+            ('boligrafo vaca', 'boligrafo vaca', '0ee0400b4cd34172b7b8cbd781bae6e9.jpeg'),
+        ]),
+        'Mousepads': (7.00, [
+            ('Mousepad Barbie', 'Mousepad Barbie', '7cbd474eee504d88b614e814655fb7c6.jpeg'),
+            ('Mousepad Ghostface', 'Mousepad Ghostface', '9b253cb59b8c4de5be0de4145abe0805.jpeg'),
+            ('Mousepad Girl Power', 'Mousepad Girl Power', '4c24b32812ca4e63b4ba1873ae29531f.jpeg'),
+            ('Mousepad Goku Kid', 'Mousepad Goku Kid', '9b0b648a99cc4f7fbadafb79dbf50bc5.jpeg'),
+            ('Mousepad Jinx', 'Mousepad Jinx', 'c6d5ffb6c7884c5cadc344337746d63f.jpeg'),
+            ('Mousepad Life is short', 'Mousepad Life is short', '24db2af96b8940bf9a73d779bb033422.jpeg'),
+            ('Mousepad Messi', 'Mousepad Messi', '7c335884639046d69950a21b328d0c73.jpeg'),
+            ('Mousepad Minecraft', 'Mousepad Minecraft', '43f3a587a12f4435bc9cc6f837d19f2e.jpeg'),
+            ('Mousepad One Piece', 'Mousepad One Piece', '5be7ccaec1f849fbb107bd6d54899829.jpeg'),
+            ('Mousepad Sailor Moon', 'Mousepad Sailor Moon', 'f8e504b2268744acae8a14967e982b85.jpeg'),
+        ]),
+        'Termos': (13.00, [
+            ('Termo Bellota', 'Termo Bellota', 'fa09dc1ec5d1462f821f23f6c073fcec.png'),
+            ('Termo Cristiano Ronaldo', 'Termo Cristiano Ronaldo', '2a03cbc5d56f4abfa75c056467e675d3.jpeg'),
+            ('Termo Equipo Rocket', 'Termo Equipo Rocket', 'de762cce7207463482e293bbf38e11a8.jpeg'),
+            ('Termo Gatitos', 'Termo Gatitos', '54975cf7f2074392b1836129da08655e.jpeg'),
+            ('Termo Girl Power', 'Termo Girl Power', 'fcc64e231f434e7e8f7d04bcac59bfa3.jpeg'),
+            ('Termo Goku', 'Termo Goku', 'c87da9a6840d40079e36fc26ff209c7d.png'),
+            ('Termo Kpop Demon Hunters', 'Termo Kpop Demon Hunters', 'bc9feb99bac7410fba0b747643bfa7f1.png'),
+            ('Termo Mascaras Kitsune', 'Termo Mascaras Kitsune', 'a1d745854c8e423795808874d09d4c25.jpeg'),
+            ('Termo Princesa Grumosa', 'Termo Princesa Grumosa', '9bdbe89ed2ef419fb2fa67c4b11be4ed.png'),
+            ('Termo Villanos Dragon Ball', 'Termo Villanos Dragon Ball', 'f5184109179b40179f1827d73196faf5.png'),
+        ]),
+    }
+    for cat_name, (precio, products) in new_products.items():
+        cat_row = conn.execute('SELECT id_categoria FROM categorias WHERE nombre = ? LIMIT 1', (cat_name,)).fetchone()
+        if cat_row:
+            cat_id = cat_row['id_categoria']
+            for nombre, descripcion, imagen in products:
+                cur = conn.execute(
+                    'INSERT INTO productos (nombre, descripcion, costo, precio_venta, id_categoria, activo) VALUES (?, ?, ?, ?, ?, 1)',
+                    (nombre, descripcion, precio, precio, cat_id)
+                )
+                prod_id = cur.lastrowid
+                conn.execute('INSERT INTO inventario (id_producto, stock_actual) VALUES (?, ?)', (prod_id, 10))
+                conn.execute('INSERT INTO imagenes_productos (id_producto, ruta_imagen) VALUES (?, ?)', (prod_id, imagen))
+    conn.commit()
 
-# =========================================================
-# Password recovery via email
+conn.close()
 # =========================================================
 import smtplib
 import secrets
